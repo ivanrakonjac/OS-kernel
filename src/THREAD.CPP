@@ -1,6 +1,7 @@
 #include "THREAD.H"
 #include "PCB.H"
 
+
 void Thread::start(){
 	this->myPCB->start();
 }
@@ -18,11 +19,14 @@ ID Thread::getRunningId(){
 }
 
 Thread* Thread::getThreadById(int id){
-	return System::allThreads->getPCBwithID(id);
 }
 
-Thread::Thread(StackSize stackSize,Time timeSlice){
+Thread::Thread(){
+	myPCB = new PCB();
+}
 
+Thread::Thread(StackSize ss,Time ts){
+	myPCB = new PCB(ss,ts,this);
 }
 
 Thread::~Thread(){

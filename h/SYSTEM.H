@@ -1,13 +1,10 @@
 #ifndef _SYSTEM_H_
 #define _SYSTEM_H_
 
-#include "PCB.H"
 #include <iostream.h>
-#include "SCHEDULE.H"
 #include <DOS.H>
-#include "PCBLIST.H"
 
-//class PCB;
+class PCB_LIST;
 
 typedef void interrupt (*pInterrupt)(...); //pok na prekidnu rutinu
 void interrupt timer(...);

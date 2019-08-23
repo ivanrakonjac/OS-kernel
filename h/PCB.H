@@ -3,7 +3,8 @@
 
 #include <iostream.h>
 #include <dos.h>
-#include "THREAD.H"
+
+class Thread;
 
 class PCB{
 
@@ -15,7 +16,7 @@ public:
 	enum State { READY, RUNNING, BLOCKED, FINISHED, NEW };
 
 	PCB();
-	PCB(unsigned long stackSize, unsigned int timeSlice, void (*body)());
+	PCB(unsigned long stackSize, unsigned int timeSlice, Thread* myTr);
 	~PCB();
 
 	void start();
@@ -24,18 +25,19 @@ public:
 	int getID() const{
 		return this->id;
 	}
+	void setID(int id){
+		this->id=id;
+	}
 
 	static int getRunningId(){
 		return runnig->id;
 	}
 
-	static void wraper();
+	static void wrapper();
 
 private:
 
 	friend void interrupt timer(...);
-	friend void exitThread();
-	friend void f();
 
 	unsigned bp;
 	unsigned sp;
@@ -44,7 +46,7 @@ private:
 	unsigned* stack;
 	int quantum;
 	int id;
-	Thread thread;
+	Thread* myThread;
 
 
 

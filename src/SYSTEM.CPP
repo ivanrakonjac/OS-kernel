@@ -1,4 +1,7 @@
 #include "System.h"
+#include "SCHEDULE.H"
+#include "PCBLIST.H"
+#include "PCB.H"
 
 PCB_LIST* System::allThreads = new PCB_LIST();
 
@@ -100,9 +103,4 @@ void System::dispatch(){
 	System::context_switch_on_demand = 1;
 	timer();
 	asm sti;
-}
-
-void exitThread(){
-	PCB::runnig->state = PCB::FINISHED;
-	System::dispatch();
 }

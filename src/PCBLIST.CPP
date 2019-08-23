@@ -1,4 +1,5 @@
 #include "PCBLIST.H"
+#include "PCB.H"
 
 int PCB_LIST::insert(PCB* pcb){
 	Node* newNode = new Node (pcb);
@@ -46,13 +47,14 @@ PCB* PCB_LIST::getPCBwithID(int id){
 	if(first == 0) return 0;
 	if(id<0) return 0;
 
-	Node* temp = first;
+	Node* temp;
 
-	for(int i = 0; i != id && temp != 0; temp = temp->next, i++);
+	for(temp = first ; temp != 0; temp = temp->next){
+		if(temp->node->getID() == id) return temp->node;
+	}
 
 	if(temp == 0) return 0;
 
-	return temp->node;
 }
 
 PCB* PCB_LIST::popFront(){

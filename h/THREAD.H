@@ -1,4 +1,3 @@
-// File: thread.h
 
 #ifndef _thread_h_
 #define _thread_h_
@@ -12,6 +11,7 @@ const Time defaultTimeSlice = 2; // default = 2*55ms
 typedef int ID;
 
 class PCB; // Kernel's implementation of a user's thread
+class Idle;
 
 class Thread {
 	public:
@@ -26,10 +26,12 @@ class Thread {
 
 	protected:
 
-		Thread (StackSize stackSize = defaultStackSize, Time timeSlice = defaultTimeSlice);
+	 	Thread ();
+		Thread (StackSize stackSize, Time timeSlice);
 
 	 	friend class PCB;
-	 	virtual void run() {}
+	 	friend class Idle;
+	 	virtual void run() {};
 	
 	private:
 
