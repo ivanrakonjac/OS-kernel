@@ -14,6 +14,7 @@ PCB::PCB(){
 	quantum = 1;
 	id=-1;
 	myThread=0;
+	blockedOnThread=0;
 
 	stack=0;
 
@@ -28,6 +29,7 @@ PCB::PCB(unsigned long stackSize, unsigned int timeSlice, Thread* myTr){
 		this->quantum=timeSlice;
 		this->id=++ajdi;
 		this->myThread=myTr;
+		this->blockedOnThread = new PCB_LIST();
 
 		asm cli;
 
@@ -53,6 +55,7 @@ PCB::PCB(unsigned long stackSize, unsigned int timeSlice, Thread* myTr){
 
 PCB::~PCB(){
 	System::allThreads->remove(this);
+	delete blockedOnThread;
 	if(this->stack)
 		delete [] this->stack;
 }
@@ -70,12 +73,33 @@ void PCB::start(){
 }
 
 void PCB::waitToComplete(){
+	lock
+	if(this->myThread == System::idleThread->myPCB || this==runnig) return;
+	if(this->state == FINISHED || this->state == NEW ) return;
+
+	cout<<"--------PCB::waitToComplete()-----------"<<endl;
+	cout<<"running: "<<PCB::runnig->getID()<<endl;
+	runnig->state = BLOCKED;
+	blockedOnThread->insert(runnig);
+
+	unlock
+
+	System::dispatch();
+
 
 }
 
 void PCB::wrapper(){
 	PCB::runnig->myThread->run();
+
 	lock
+
+	PCB* temp = runnig->blockedOnThread->popFront();
+
+	for(temp;temp!=0;temp=runnig->blockedOnThread->popFront()){
+		temp->state = READY;
+		Scheduler::put(temp);
+	}
 	PCB::runnig->state = PCB::FINISHED;
 	unlock
 	System::dispatch();

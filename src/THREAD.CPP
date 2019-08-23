@@ -1,5 +1,7 @@
 #include "THREAD.H"
 #include "PCB.H"
+#include "SYSTEM.H"
+#include "PCBLIST.H"
 
 
 void Thread::start(){
@@ -7,11 +9,13 @@ void Thread::start(){
 }
 
 void Thread::waitToComplete(){
+	cout<<"Nit "<<this->getId()<<" waitToComplete()"<<endl;
 	this->myPCB->waitToComplete();
+
 }
 
 ID Thread::getId(){
-	this->myPCB->getID();
+	return this->myPCB->getID();
 }
 
 ID Thread::getRunningId(){
@@ -19,6 +23,7 @@ ID Thread::getRunningId(){
 }
 
 Thread* Thread::getThreadById(int id){
+	return System::allThreads->getPCBwithID(id)->getThread();
 }
 
 Thread::Thread(){
@@ -30,5 +35,9 @@ Thread::Thread(StackSize ss,Time ts){
 }
 
 Thread::~Thread(){
+	myPCB->waitToComplete();
 
+	lock
+	delete myPCB;
+	unlock
 }

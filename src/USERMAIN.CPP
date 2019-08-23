@@ -40,16 +40,16 @@ int userMain(int argc, char *argv[]) {
 	TestThread* tt = new TestThread();
 	tt->start();
 
-	int tst = tt->getId();
+	//int tst = tt->getId();
 
-	System::allThreads->getPCBwithID(tst)->setState(PCB::BLOCKED);
+	//System::allThreads->getPCBwithID(tst)->setState(PCB::BLOCKED);
+	//cout<<"Nit id: "<<tst<<" BLOCKED"<<endl;
 
 	TestThread* tt2 = new TestThread();
 	tt2->start();
 
 	TestThread* tt3 = new TestThread();
 	tt3->start();
-
 
 	PCB* main = new PCB();
 	PCB::runnig = main;
@@ -59,13 +59,14 @@ int userMain(int argc, char *argv[]) {
 		cout<<"main "<<i<<endl;
 		unlock
 
-		if(i == 5) PCB::runnig->setState(PCB::BLOCKED);
+		if(PCB::runnig->getID()==2) System::allThreads->getPCBwithID(2)->getThread()->waitToComplete();
+
+		if(i==1) {tt3->waitToComplete();}
+		//if(i == 5) PCB::runnig->setState(PCB::BLOCKED);
 
 		for (int j = 0; j< 30000; ++j)
 			for (int k = 0; k < 30000; ++k);
 	}
-
-	cout<<"tt state: "<<System::allThreads->getPCBwithID(tst)->getState()<<endl;
 	cout<<"Srecan kraj!"<<endl;
 
 	return 0;

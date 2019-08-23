@@ -5,6 +5,7 @@
 #include <dos.h>
 
 class Thread;
+class PCB_LIST;
 
 class PCB{
 
@@ -30,6 +31,9 @@ public:
 	}
 	State getState() const {
 		return this->state;
+	}
+	Thread* getThread() const{
+		return this->myThread;
 	}
 
 	void setID(int id){
@@ -57,6 +61,7 @@ private:
 	int quantum;
 	int id;
 	Thread* myThread;
+	PCB_LIST* blockedOnThread;
 
 
 
