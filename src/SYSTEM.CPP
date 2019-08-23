@@ -2,8 +2,10 @@
 #include "SCHEDULE.H"
 #include "PCBLIST.H"
 #include "PCB.H"
+#include "IDLE.H"
 
 PCB_LIST* System::allThreads = new PCB_LIST();
+Thread* System::idleThread = new Idle();
 
 volatile unsigned int System::runningTimeCntr=20;
 volatile unsigned int System::lockFlag=1;
@@ -19,9 +21,10 @@ unsigned tss;
 unsigned tbp;
 unsigned tid;
 
+unsigned brojac = 0;
+
 // nova prekidna rutina tajmera
 void interrupt timer(...){
-
 	if (!System::context_switch_on_demand) System::runningTimeCntr--;
 	if (System::runningTimeCntr == 0 || System::context_switch_on_demand) {
 		if(System::lockFlag){
@@ -37,15 +40,13 @@ void interrupt timer(...){
 			PCB::runnig->ss=tss;
 			PCB::runnig->bp=tbp;
 
-			// scheduler
-			//PCB::runnig = getNextPCBToExecute();
-
-			if(PCB::runnig->state!=PCB::FINISHED) Scheduler::put((PCB*)PCB::runnig);
+			if(PCB::runnig->state==PCB::READY && PCB::runnig!= System::idleThread->myPCB) Scheduler::put((PCB*)PCB::runnig);
 			PCB::runnig=Scheduler::get();
 
-			if(PCB::runnig->quantum==0){
-				Scheduler::put((PCB*)PCB::runnig);
-				PCB::runnig=Scheduler::get();
+			if(PCB::runnig==0){
+				cout<<brojac<<") running==0"<<endl;
+				brojac++;
+				PCB::runnig = System::idleThread->myPCB;
 			}
 
 			tsp = PCB::runnig->sp;
@@ -94,6 +95,10 @@ void System::inic(){
 void System::restore(){
 	asm cli
 	setvect(stara,oldTimer);
+
+	delete System::allThreads;
+	delete System::idleThread;
+
 	asm sti
 }
 

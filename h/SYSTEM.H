@@ -5,6 +5,7 @@
 #include <DOS.H>
 
 class PCB_LIST;
+class Thread;
 
 typedef void interrupt (*pInterrupt)(...); //pok na prekidnu rutinu
 void interrupt timer(...);
@@ -20,6 +21,7 @@ class System{
 public:
 
 	static PCB_LIST* allThreads;
+	static Thread* idleThread;
 
 	static volatile unsigned int runningTimeCntr;
 	static volatile unsigned int lockFlag;

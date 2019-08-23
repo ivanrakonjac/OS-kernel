@@ -11,7 +11,7 @@ PCB* PCB::runnig=0;
 
 PCB::PCB(){
 	state=PCB::READY;
-	quantum = 0;
+	quantum = 1;
 	id=-1;
 	myThread=0;
 
@@ -60,10 +60,11 @@ PCB::~PCB(){
 void PCB::start(){
 	lock
 	if(this->state == PCB::NEW){
-
-		this->state = PCB::READY;
-		Scheduler::put((PCB*)this);
-
+		if(this != System::idleThread->myPCB){
+			this->state = PCB::READY;
+			Scheduler::put((PCB*)this);
+			cout<<"ID: "<<this->getID()<<" | state: "<<this->getState()<<endl;
+		}
 	}
 	unlock
 }

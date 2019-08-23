@@ -5,7 +5,7 @@
 #include "SCHEDULE.H"
 #include "PCB.H"
 #include "PCBLIST.H"
-#include "THREAD.H"
+#include "IDLE.H"
 #include "SYSTEM.H"
 
 class TestThread : public Thread {
@@ -40,11 +40,16 @@ int userMain(int argc, char *argv[]) {
 	TestThread* tt = new TestThread();
 	tt->start();
 
+	int tst = tt->getId();
+
+	System::allThreads->getPCBwithID(tst)->setState(PCB::BLOCKED);
+
 	TestThread* tt2 = new TestThread();
 	tt2->start();
 
 	TestThread* tt3 = new TestThread();
 	tt3->start();
+
 
 	PCB* main = new PCB();
 	PCB::runnig = main;
@@ -54,10 +59,13 @@ int userMain(int argc, char *argv[]) {
 		cout<<"main "<<i<<endl;
 		unlock
 
+		if(i == 5) PCB::runnig->setState(PCB::BLOCKED);
+
 		for (int j = 0; j< 30000; ++j)
 			for (int k = 0; k < 30000; ++k);
 	}
 
+	cout<<"tt state: "<<System::allThreads->getPCBwithID(tst)->getState()<<endl;
 	cout<<"Srecan kraj!"<<endl;
 
 	return 0;

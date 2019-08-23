@@ -13,7 +13,7 @@ public:
 	static int ajdi;
 	static PCB* runnig;
 
-	enum State { READY, RUNNING, BLOCKED, FINISHED, NEW };
+	enum State { READY, BLOCKED, FINISHED, NEW };
 
 	PCB();
 	PCB(unsigned long stackSize, unsigned int timeSlice, Thread* myTr);
@@ -25,8 +25,18 @@ public:
 	int getID() const{
 		return this->id;
 	}
+	int getQuantum() const {
+		return this->quantum;
+	}
+	State getState() const {
+		return this->state;
+	}
+
 	void setID(int id){
 		this->id=id;
+	}
+	void setState(State s){
+		this->state = s;
 	}
 
 	static int getRunningId(){

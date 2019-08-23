@@ -31,6 +31,7 @@ class Thread {
 
 	 	friend class PCB;
 	 	friend class Idle;
+	 	friend void interrupt timer(...);
 	 	virtual void run() {};
 	
 	private:
