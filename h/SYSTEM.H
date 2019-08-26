@@ -6,6 +6,7 @@
 
 class PCB_LIST;
 class Thread;
+class TIME_BLCK_LIST;
 
 typedef void interrupt (*pInterrupt)(...); //pok na prekidnu rutinu
 void interrupt timer(...);
@@ -22,6 +23,7 @@ public:
 
 	static PCB_LIST* allThreads;
 	static Thread* idleThread;
+	static TIME_BLCK_LIST* timeBlockList;
 
 	static volatile unsigned int runningTimeCntr;
 	static volatile unsigned int lockFlag;

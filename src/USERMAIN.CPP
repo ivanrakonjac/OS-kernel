@@ -7,6 +7,7 @@
 #include "PCBLIST.H"
 #include "IDLE.H"
 #include "SYSTEM.H"
+#include "SEMAPHOR.H"
 
 class TestThread : public Thread {
 public:
@@ -30,39 +31,85 @@ void TestThread::run() {
 	}
 }
 
-void tick() {
-	//u javnom testu
+class TestThread2 : public Thread {
+public:
+	TestThread2(Semaphore* s): Thread(4096, 20){
+		sem = s;
+	};
+	~TestThread2() {}
+protected:
+	Semaphore* sem;
+	void run();
+};
+
+void TestThread2::run() {
+	for (int i =0; i < 30; ++i) {
+		lock
+		cout<<"funkcija_"<<PCB::runnig->getID()<<" "<<i<<endl;
+		unlock
+
+		if(i==5) {
+			sem->wait(3);
+		}
+		//if(i==20) sem->signal(0);
+
+		for (int k = 0; k<10000; ++k)
+			for (int j = 0; j <30000; ++j);
+	}
+}
+
+class TestThread3 : public Thread {
+public:
+	TestThread3(Semaphore* s): Thread(4096, 20){
+		sem = s;
+	};
+	~TestThread3() {}
+protected:
+	Semaphore* sem;
+	void run();
+};
+
+void TestThread3::run() {
+	for (int i =0; i < 30; ++i) {
+		lock
+		cout<<"funkcija_"<<PCB::runnig->getID()<<" "<<i<<endl;
+		unlock
+
+		if(i==8) {
+			sem->wait(100);
+		}
+		//if(i==20) sem->signal(0);
+
+		for (int k = 0; k<10000; ++k)
+			for (int j = 0; j <30000; ++j);
+	}
 }
 
 int userMain(int argc, char *argv[]) {
 	cout<<"USer main"<<endl;
 
-	TestThread* tt = new TestThread();
+	Semaphore* sem1 = new Semaphore();
+
+	TestThread2* tt = new TestThread2(sem1);
 	tt->start();
 
-	//int tst = tt->getId();
-
-	//System::allThreads->getPCBwithID(tst)->setState(PCB::BLOCKED);
-	//cout<<"Nit id: "<<tst<<" BLOCKED"<<endl;
-
-	TestThread* tt2 = new TestThread();
+	TestThread2* tt2 = new TestThread2(sem1);
 	tt2->start();
 
-	TestThread* tt3 = new TestThread();
+	TestThread3* tt3 = new TestThread3(sem1);
 	tt3->start();
 
 	PCB* main = new PCB();
 	PCB::runnig = main;
+
+
 
 	for (int i = 0; i < 15; ++i) {
 		lock
 		cout<<"main "<<i<<endl;
 		unlock
 
-		if(PCB::runnig->getID()==2) System::allThreads->getPCBwithID(2)->getThread()->waitToComplete();
-
-		if(i==1) {tt3->waitToComplete();}
-		//if(i == 5) PCB::runnig->setState(PCB::BLOCKED);
+		if(i==10) sem1->signal(0);
 
 		for (int j = 0; j< 30000; ++j)
 			for (int k = 0; k < 30000; ++k);

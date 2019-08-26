@@ -35,6 +35,10 @@ public:
 	Thread* getThread() const{
 		return this->myThread;
 	}
+	int getSignalWoken() const{
+		return this->signalWoken;
+	}
+
 
 	void setID(int id){
 		this->id=id;
@@ -42,6 +46,10 @@ public:
 	void setState(State s){
 		this->state = s;
 	}
+	void setSignalWoken(int i){
+		this->signalWoken = i;
+	}
+
 
 	static int getRunningId(){
 		return runnig->id;
@@ -60,6 +68,7 @@ private:
 	unsigned* stack;
 	int quantum;
 	int id;
+	int signalWoken;
 	Thread* myThread;
 	PCB_LIST* blockedOnThread;
 

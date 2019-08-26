@@ -3,9 +3,11 @@
 #include "PCBLIST.H"
 #include "PCB.H"
 #include "IDLE.H"
+#include "TIMEBLCK.H"
 
 PCB_LIST* System::allThreads = new PCB_LIST();
 Thread* System::idleThread = new Idle();
+TIME_BLCK_LIST* System::timeBlockList = new TIME_BLCK_LIST();
 
 volatile unsigned int System::runningTimeCntr=20;
 volatile unsigned int System::lockFlag=1;
@@ -25,7 +27,7 @@ unsigned brojac = 0;
 
 // nova prekidna rutina tajmera
 void interrupt timer(...){
-	if (!System::context_switch_on_demand) System::runningTimeCntr--;
+	if (!System::context_switch_on_demand){ System::runningTimeCntr--; System::timeBlockList->update();}
 	if (System::runningTimeCntr == 0 || System::context_switch_on_demand) {
 		if(System::lockFlag){
 			System::context_switch_on_demand=0;

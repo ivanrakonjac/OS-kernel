@@ -38,8 +38,6 @@ int PCB_LIST::remove(PCB* pcb){
 		last = prev;
 	}
 
-	delete temp;
-
 	return 1;
 }
 

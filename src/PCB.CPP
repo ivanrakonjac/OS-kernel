@@ -15,6 +15,7 @@ PCB::PCB(){
 	id=-1;
 	myThread=0;
 	blockedOnThread=0;
+	signalWoken = 0;
 
 	stack=0;
 
@@ -28,6 +29,7 @@ PCB::PCB(unsigned long stackSize, unsigned int timeSlice, Thread* myTr){
 		this->state=PCB::NEW;
 		this->quantum=timeSlice;
 		this->id=++ajdi;
+		this->signalWoken = 0;
 		this->myThread=myTr;
 		this->blockedOnThread = new PCB_LIST();
 
