@@ -26,8 +26,7 @@ class Thread {
 
 	protected:
 
-	 	Thread ();
-		Thread (StackSize stackSize, Time timeSlice);
+		Thread (StackSize stackSize = defaultStackSize, Time timeSlice = defaultTimeSlice);
 
 	 	friend class PCB;
 	 	friend class Idle;

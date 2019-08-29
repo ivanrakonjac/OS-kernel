@@ -7,9 +7,6 @@
 
 KernelSem::KernelSem(int inic){
 	value = inic;
-	asm cli
-	cout<<"KERNELSEM(): val = "<<value<<endl;
-	asm sti
 	lock
 	blockList = new PCB_LIST();
 	unlock
@@ -26,9 +23,7 @@ int KernelSem::wait(int maxTimeToWait){
 
 	asm cli;
 
-	cout<<"WAIT(): val = "<<value<<endl;
-
-	if(value>0){
+	if(value>=0){
 		asm sti
 		return 1;
 	}
@@ -37,18 +32,22 @@ int KernelSem::wait(int maxTimeToWait){
 
 	if(maxTimeToWait == 0){
 		blockList->insert(PCB::runnig);
-		cout<<"USPAVANA blockList NIT: "<<PCB::runnig->getID()<<endl;
+		//lock
+		//cout<<"USPAVANA blockList NIT: "<<PCB::runnig->getID()<<endl;
+		//unlock
 	}
 	else{
 		System::timeBlockList->insert(PCB::runnig,maxTimeToWait,this);
-		cout<<"USPAVANA timeBlockList NIT: "<<PCB::runnig->getID()<<endl;
+		//lock
+		//cout<<"USPAVANA timeBlockList NIT: "<<PCB::runnig->getID()<<endl;
+		//unlock
 	}
-
-	asm sti
 
 	System::dispatch();
 
-	if(PCB::runnig->getSignalWoken()){
+	asm sti
+
+	if(!PCB::runnig->getSignalWoken()){
 		PCB::runnig->setSignalWoken(0);
 		return 0;
 	}
@@ -63,15 +62,13 @@ int KernelSem::signal(int n){
 	else if(n == 0 ){
 		value = value + 1;
 
-		cout<<"SIGNAL(0): val = "<<value<<endl;
-
 		PCB* temp = blockList->popFront();
 		if(temp == 0) return n;
 
 		temp->setState(PCB::READY);
 		temp->setSignalWoken(1);
 
-		cout<<"PROBUDJENA NIT: "<<temp->getID()<<endl;
+		//cout<<"PROBUDJENA NIT: "<<temp->getID()<<endl;
 
 		Scheduler::put(temp);
 
@@ -81,8 +78,6 @@ int KernelSem::signal(int n){
 		int cntr = 0;
 		value = value + n;
 
-		cout<<"SIGNAL(n): val = "<<value<<endl;
-
 		for (int i= 0; i < n; ++i) {
 			PCB* temp = blockList->popFront();
 			if(temp == 0) return cntr;
@@ -90,7 +85,7 @@ int KernelSem::signal(int n){
 			temp->setState(PCB::READY);
 			temp->setSignalWoken(1);
 
-			cout<<"PROBUDJENA NIT: "<<temp->getID()<<endl;
+			//cout<<"PROBUDJENA NIT: "<<temp->getID()<<endl;
 
 			Scheduler::put(temp);
 		}

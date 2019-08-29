@@ -9,7 +9,6 @@ void Thread::start(){
 }
 
 void Thread::waitToComplete(){
-	cout<<"Nit "<<this->getId()<<" waitToComplete()"<<endl;
 	this->myPCB->waitToComplete();
 
 }
@@ -26,18 +25,22 @@ Thread* Thread::getThreadById(int id){
 	return System::allThreads->getPCBwithID(id)->getThread();
 }
 
-Thread::Thread(){
-	myPCB = new PCB();
-}
 
 Thread::Thread(StackSize ss,Time ts){
 	myPCB = new PCB(ss,ts,this);
 }
 
 Thread::~Thread(){
+	lock
+	cout<<"NIT: "<<getId()<<" Thread::~Thread()"<<endl;
+	unlock
 	myPCB->waitToComplete();
 
 	lock
 	delete myPCB;
 	unlock
+}
+
+void dispatch(){
+	System::dispatch();
 }

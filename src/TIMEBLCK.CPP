@@ -93,10 +93,11 @@ void TIME_BLCK_LIST::update(){
 		timeNode* temp =this->popFront();
 
 		temp->data->setState(PCB::READY);
+		temp->data->setSignalWoken(0);
 		temp->semaphor->incVal();
 
-		cout<<"SIGNAL(n): val = "<<temp->semaphor->val()<<endl;
-		cout<<"PROBUDJENA NIT: "<<temp->data->getID()<<endl;
+		//cout<<"SIGNAL(n): val = "<<temp->semaphor->val()<<endl;
+		//cout<<"PROBUDJENA NIT: "<<temp->data->getID()<<endl;
 
 		Scheduler::put(temp->data);
 	}

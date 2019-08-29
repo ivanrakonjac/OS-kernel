@@ -8,112 +8,156 @@
 #include "IDLE.H"
 #include "SYSTEM.H"
 #include "SEMAPHOR.H"
-
-class TestThread : public Thread {
-public:
-	TestThread(): Thread(4096, 20){};
-	~TestThread() {}
-protected:
-	void run();
-};
+#include <stdlib.h>
 
 
+const int n = 10;
+int count = 100;
+Semaphore mutex(1);
 
-void TestThread::run() {
-	for (int i =0; i < 30; ++i) {
-		System::lockFlag=0;
-		cout<<"funkcija_"<<PCB::runnig->getID()<<" "<<i<<endl;
-		System::lockFlag=1;
-		if(System::context_switch_on_demand)
-			System::dispatch();
-		for (int k = 0; k<10000; ++k)
-			for (int j = 0; j <30000; ++j);
-	}
+int mutex_glb = 1;
+
+void mutex_glb_wait(){
+ sloop:asm{
+	mov ax, 0
+	xchg ax, mutex_glb
+}
+ if(_AX ==0){
+	dispatch();
+	asm jmp sloop;
+ }
 }
 
-class TestThread2 : public Thread {
+
+#define intLock mutex_glb_wait();
+#define intUnlock mutex_glb = 1;
+
+
+class BoundedBuffer {
 public:
-	TestThread2(Semaphore* s): Thread(4096, 20){
-		sem = s;
-	};
-	~TestThread2() {}
-protected:
-	Semaphore* sem;
-	void run();
+
+	BoundedBuffer (unsigned size);
+	virtual ~BoundedBuffer ();
+	int append (char);
+	char take ();
+	int  fullCount(){return itemAvailable.val();};    // potrebno consumeru
+
+private:
+	unsigned Size;
+	Semaphore mutexa, mutext;
+	Semaphore spaceAvailable, itemAvailable;
+	char* buffer;
+	int head, tail;
+
 };
 
-void TestThread2::run() {
-	for (int i =0; i < 30; ++i) {
+BoundedBuffer::BoundedBuffer (unsigned size) : Size(size),
+	mutexa(1), mutext(1), spaceAvailable(size), itemAvailable(0),
+	head(0), tail(0) {
+		buffer = new char[size];
+		if (!buffer) exit(1);
+	}
+
+BoundedBuffer::~BoundedBuffer(){
+	intLock
+	delete [] buffer;
+	intUnlock
+}
+
+int BoundedBuffer::append (char d) {
+	lock
+	cout<<endl<<"-----------------------------"<<endl;
+	cout<<"append() "<<d<<endl;
+	unlock
+	spaceAvailable.wait(0);
+	mutexa.wait(0);
+		buffer[tail] = d;
+		tail = (tail+1)%Size;
+	mutexa.signal();
+	itemAvailable.signal();
+	lock
+	cout<<"itemAvailable: "<<itemAvailable.val()<<endl;
+	cout<<"spaceAvailable: "<<spaceAvailable.val()<<endl;
+	cout<<"-----------------------------"<<endl;
+	unlock
+	return 0;
+}
+
+char BoundedBuffer::take () {
+	lock
+	cout<<endl<<"-----------------------------"<<endl;
+	unlock
+	itemAvailable.wait(0);
+	mutext.wait(0);
+		char d = buffer[head];
+		head = (head+1)%Size;
 		lock
-		cout<<"funkcija_"<<PCB::runnig->getID()<<" "<<i<<endl;
+		cout<<"take() "<<d<<endl;
 		unlock
-
-		if(i==5) {
-			sem->wait(3);
-		}
-		//if(i==20) sem->signal(0);
-
-		for (int k = 0; k<10000; ++k)
-			for (int j = 0; j <30000; ++j);
-	}
+	mutext.signal();
+	spaceAvailable.signal();
+	lock
+	cout<<"itemAvailable: "<<itemAvailable.val()<<endl;
+	cout<<"spaceAvailable: "<<spaceAvailable.val()<<endl;
+	cout<<"-----------------------------"<<endl;
+	unlock
+	return d;
 }
 
-class TestThread3 : public Thread {
+BoundedBuffer buffer(n/2);
+
+void tick(){};
+
+class Producer: public Thread
+{
 public:
-	TestThread3(Semaphore* s): Thread(4096, 20){
-		sem = s;
-	};
-	~TestThread3() {}
+	Producer(): Thread() {};
+	~Producer()
+	{
+		waitToComplete();
+	}
+
 protected:
-	Semaphore* sem;
-	void run();
+	void run()
+	{
+			buffer.append('c');
+			buffer.append('d');
+			buffer.append('e');
+			buffer.append('f');
+			buffer.append('g');
+	}
 };
 
-void TestThread3::run() {
-	for (int i =0; i < 30; ++i) {
-		lock
-		cout<<"funkcija_"<<PCB::runnig->getID()<<" "<<i<<endl;
-		unlock
-
-		if(i==8) {
-			sem->wait(100);
-		}
-		//if(i==20) sem->signal(0);
-
-		for (int k = 0; k<10000; ++k)
-			for (int j = 0; j <30000; ++j);
+class Consumer: public Thread
+{
+public:
+	Consumer(): Thread() {};
+	~Consumer()
+	{
+		waitToComplete();
 	}
-}
+
+protected:
+	void run()
+	{
+			buffer.take();
+			buffer.take();
+			buffer.take();
+			buffer.take();
+			buffer.take();
+			buffer.take();
+	}
+};
 
 int userMain(int argc, char *argv[]) {
+
 	cout<<"USer main"<<endl;
 
-	Semaphore* sem1 = new Semaphore();
+	Producer p;
+	p.start();
+	Consumer c;
+	c.start();
 
-	TestThread2* tt = new TestThread2(sem1);
-	tt->start();
-
-	TestThread2* tt2 = new TestThread2(sem1);
-	tt2->start();
-
-	TestThread3* tt3 = new TestThread3(sem1);
-	tt3->start();
-
-	PCB* main = new PCB();
-	PCB::runnig = main;
-
-
-
-	for (int i = 0; i < 15; ++i) {
-		lock
-		cout<<"main "<<i<<endl;
-		unlock
-
-		if(i==10) sem1->signal(0);
-
-		for (int j = 0; j< 30000; ++j)
-			for (int k = 0; k < 30000; ++k);
-	}
 	cout<<"Srecan kraj!"<<endl;
 
 	return 0;

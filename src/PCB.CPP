@@ -7,7 +7,7 @@
 #include "SCHEDULE.H"
 
 int PCB::ajdi=0;
-PCB* PCB::runnig=0;
+PCB* PCB::runnig= new PCB();
 
 PCB::PCB(){
 	state=PCB::READY;
@@ -39,16 +39,14 @@ PCB::PCB(unsigned long stackSize, unsigned int timeSlice, Thread* myTr){
 		StackSize realStackSize = stackSize/sizeof(unsigned int);
 
 		stack = new unsigned [stackSize/sizeof(unsigned int)];
-		stack[stackSize-1] = 0x200;
+		stack[realStackSize-1] = 0x200;
 
-		stack[stackSize-2] = FP_SEG(PCB::wrapper);
-		stack[stackSize-3] = FP_OFF(PCB::wrapper);
+		stack[realStackSize-2] = FP_SEG(PCB::wrapper);
+		stack[realStackSize-3] = FP_OFF(PCB::wrapper);
 
-		sp = FP_OFF(stack+stackSize-12);
-		ss = FP_SEG(stack+stackSize-12);
-		bp = FP_OFF(stack+stackSize-12);
-
-		//thread = body;
+		sp = FP_OFF(stack+realStackSize-12);
+		ss = FP_SEG(stack+realStackSize-12);
+		bp = FP_OFF(stack+realStackSize-12);
 
 		System::allThreads->insert(this);
 
@@ -76,11 +74,22 @@ void PCB::start(){
 
 void PCB::waitToComplete(){
 	lock
-	if(this->myThread == System::idleThread->myPCB || this==runnig) return;
-	if(this->state == FINISHED || this->state == NEW ) return;
+	if(this->myThread == System::idleThread->myPCB || this==runnig){
+		lock
+		cout<<"this==running"<<endl;
+		unlock
+		return;
+	}
+	if(this->state == FINISHED || this->state == NEW ) {
+		lock
+		cout<<"NIT: "<<getID()<<" state mismatch state="<<state<<endl;
+		unlock
+		return;
+	}
 
 	cout<<"--------PCB::waitToComplete()-----------"<<endl;
-	cout<<"running: "<<PCB::runnig->getID()<<endl;
+	cout<<"running: "<<PCB::runnig->getID()<<" je blokirana"<<endl;
+	cout<<"----------------------------------------"<<endl;
 	runnig->state = BLOCKED;
 	blockedOnThread->insert(runnig);
 

@@ -25,9 +25,16 @@ unsigned tid;
 
 unsigned brojac = 0;
 
+void tick();
+
 // nova prekidna rutina tajmera
 void interrupt timer(...){
-	if (!System::context_switch_on_demand){ System::runningTimeCntr--; System::timeBlockList->update();}
+	if (!System::context_switch_on_demand){
+		tick();
+		System::runningTimeCntr--;
+		System::timeBlockList->update();
+	}
+
 	if (System::runningTimeCntr == 0 || System::context_switch_on_demand) {
 		if(System::lockFlag){
 			System::context_switch_on_demand=0;
@@ -100,7 +107,7 @@ void System::restore(){
 
 	delete System::allThreads;
 	delete System::idleThread;
-
+	delete PCB::runnig;
 	asm sti
 }
 
