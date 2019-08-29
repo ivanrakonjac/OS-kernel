@@ -8,157 +8,63 @@
 #include "IDLE.H"
 #include "SYSTEM.H"
 #include "SEMAPHOR.H"
+#include "EVENT.H"
 #include <stdlib.h>
 
+PREPAREENTRY(9,1);
 
-const int n = 10;
-int count = 100;
-Semaphore mutex(1);
+const int n = 16;
 
-int mutex_glb = 1;
-
-void mutex_glb_wait(){
- sloop:asm{
-	mov ax, 0
-	xchg ax, mutex_glb
-}
- if(_AX ==0){
-	dispatch();
-	asm jmp sloop;
- }
-}
+void tick(){}
 
 
-#define intLock mutex_glb_wait();
-#define intUnlock mutex_glb = 1;
-
-
-class BoundedBuffer {
+class TestThread : public Thread
+{
 public:
 
-	BoundedBuffer (unsigned size);
-	virtual ~BoundedBuffer ();
-	int append (char);
-	char take ();
-	int  fullCount(){return itemAvailable.val();};    // potrebno consumeru
+	TestThread(): Thread(4096,0) {};
+	~TestThread()
+	{
+		waitToComplete();
+	}
+protected:
 
-private:
-	unsigned Size;
-	Semaphore mutexa, mutext;
-	Semaphore spaceAvailable, itemAvailable;
-	char* buffer;
-	int head, tail;
+	void run();
 
 };
 
-BoundedBuffer::BoundedBuffer (unsigned size) : Size(size),
-	mutexa(1), mutext(1), spaceAvailable(size), itemAvailable(0),
-	head(0), tail(0) {
-		buffer = new char[size];
-		if (!buffer) exit(1);
-	}
+void TestThread::run()
+{
+	Event e(9);
 
-BoundedBuffer::~BoundedBuffer(){
-	intLock
-	delete [] buffer;
-	intUnlock
-}
-
-int BoundedBuffer::append (char d) {
-	lock
-	cout<<endl<<"-----------------------------"<<endl;
-	cout<<"append() "<<d<<endl;
-	unlock
-	spaceAvailable.wait(0);
-	mutexa.wait(0);
-		buffer[tail] = d;
-		tail = (tail+1)%Size;
-	mutexa.signal();
-	itemAvailable.signal();
-	lock
-	cout<<"itemAvailable: "<<itemAvailable.val()<<endl;
-	cout<<"spaceAvailable: "<<spaceAvailable.val()<<endl;
-	cout<<"-----------------------------"<<endl;
-	unlock
-	return 0;
-}
-
-char BoundedBuffer::take () {
-	lock
-	cout<<endl<<"-----------------------------"<<endl;
-	unlock
-	itemAvailable.wait(0);
-	mutext.wait(0);
-		char d = buffer[head];
-		head = (head+1)%Size;
+	while(1){
 		lock
-		cout<<"take() "<<d<<endl;
+		cout<<"Test thread"<<endl;
 		unlock
-	mutext.signal();
-	spaceAvailable.signal();
-	lock
-	cout<<"itemAvailable: "<<itemAvailable.val()<<endl;
-	cout<<"spaceAvailable: "<<spaceAvailable.val()<<endl;
-	cout<<"-----------------------------"<<endl;
-	unlock
-	return d;
+		for (int j = 0; j< 30000; ++j)
+			for (int k = 0; k < 30000; ++k);
+
+
+		e.wait();
+	}
+
 }
-
-BoundedBuffer buffer(n/2);
-
-void tick(){};
-
-class Producer: public Thread
-{
-public:
-	Producer(): Thread() {};
-	~Producer()
-	{
-		waitToComplete();
-	}
-
-protected:
-	void run()
-	{
-			buffer.append('c');
-			buffer.append('d');
-			buffer.append('e');
-			buffer.append('f');
-			buffer.append('g');
-	}
-};
-
-class Consumer: public Thread
-{
-public:
-	Consumer(): Thread() {};
-	~Consumer()
-	{
-		waitToComplete();
-	}
-
-protected:
-	void run()
-	{
-			buffer.take();
-			buffer.take();
-			buffer.take();
-			buffer.take();
-			buffer.take();
-			buffer.take();
-	}
-};
 
 int userMain(int argc, char *argv[]) {
 
-	cout<<"USer main"<<endl;
+	TestThread t;
+	t.start();
 
-	Producer p;
-	p.start();
-	Consumer c;
-	c.start();
+	for (int i = 0; i < 30; ++i) {
+			lock
+			cout<<"main "<<i<<endl;
+			unlock
 
-	cout<<"Srecan kraj!"<<endl;
+			for (int j = 0; j< 30000; ++j)
+				for (int k = 0; k < 30000; ++k);
+		}
+
+	cout<<"Srecan kraj! "<<System::tstBrojac<<endl;
 
 	return 0;
 }

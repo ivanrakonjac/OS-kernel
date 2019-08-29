@@ -8,6 +8,7 @@
 
 int PCB::ajdi=0;
 PCB* PCB::runnig= new PCB();
+PCB* PCB::main = PCB::runnig;
 
 PCB::PCB(){
 	state=PCB::READY;

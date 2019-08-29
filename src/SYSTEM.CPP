@@ -8,6 +8,8 @@
 PCB_LIST* System::allThreads = new PCB_LIST();
 Thread* System::idleThread = new Idle();
 TIME_BLCK_LIST* System::timeBlockList = new TIME_BLCK_LIST();
+IVTEntry* System::interruptEntries[256];
+int System::tstBrojac = 0;
 
 volatile unsigned int System::runningTimeCntr=20;
 volatile unsigned int System::lockFlag=1;
@@ -107,6 +109,7 @@ void System::restore(){
 
 	delete System::allThreads;
 	delete System::idleThread;
+	delete PCB::main;
 	delete PCB::runnig;
 	asm sti
 }

@@ -13,6 +13,7 @@ public:
 
 	static int ajdi;
 	static PCB* runnig;
+	static PCB* main;
 
 	enum State { READY, BLOCKED, FINISHED, NEW };
 
