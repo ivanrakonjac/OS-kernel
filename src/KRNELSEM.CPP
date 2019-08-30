@@ -32,15 +32,9 @@ int KernelSem::wait(int maxTimeToWait){
 
 	if(maxTimeToWait == 0){
 		blockList->insert(PCB::runnig);
-		//lock
-		//cout<<"USPAVANA blockList NIT: "<<PCB::runnig->getID()<<endl;
-		//unlock
 	}
 	else{
 		System::timeBlockList->insert(PCB::runnig,maxTimeToWait,this);
-		//lock
-		//cout<<"USPAVANA timeBlockList NIT: "<<PCB::runnig->getID()<<endl;
-		//unlock
 	}
 
 	System::dispatch();
@@ -68,8 +62,6 @@ int KernelSem::signal(int n){
 		temp->setState(PCB::READY);
 		temp->setSignalWoken(1);
 
-		//cout<<"PROBUDJENA NIT: "<<temp->getID()<<endl;
-
 		Scheduler::put(temp);
 
 		return 0;
@@ -84,8 +76,6 @@ int KernelSem::signal(int n){
 
 			temp->setState(PCB::READY);
 			temp->setSignalWoken(1);
-
-			//cout<<"PROBUDJENA NIT: "<<temp->getID()<<endl;
 
 			Scheduler::put(temp);
 		}

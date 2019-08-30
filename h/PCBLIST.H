@@ -14,9 +14,6 @@ class PCB_LIST{
 			}
 	};
 
-	Node* first;
-	Node* last;
-
 public:
 
 	PCB_LIST(){
@@ -30,6 +27,9 @@ public:
 
 	PCB* getPCBwithID(int ind);
 	PCB* popFront();
+
+	Node* first;
+	Node* last;
 
 };
 

@@ -3,9 +3,12 @@
 
 #include <iostream.h>
 #include <dos.h>
+#include "Thread.h"
 
 class Thread;
 class PCB_LIST;
+class SignalHandlerList;
+class ExecutionWaitingList;
 
 class PCB{
 
@@ -58,6 +61,20 @@ public:
 
 	static void wrapper();
 
+
+	void signal(SignalId signal);
+
+	void registerHandler(SignalId signal, SignalHandler handler);
+	void unregisterAllHandlers(SignalId id);
+
+	void swap(SignalId id, SignalHandler hand1, SignalHandler hand2);
+
+	void blockSignal(SignalId signal);
+	void unblockSignal(SignalId signal);
+
+	void updateSignalWaitgList();
+
+
 private:
 
 	friend void interrupt timer(...);
@@ -72,6 +89,12 @@ private:
 	int signalWoken;
 	Thread* myThread;
 	PCB_LIST* blockedOnThread;
+
+	PCB* owner;
+	int signalCounter;
+	SignalHandlerList* signalArray[16];
+	int signalBlockArray[16];
+	ExecutionWaitingList* signalsWaitngForExecution;
 
 
 

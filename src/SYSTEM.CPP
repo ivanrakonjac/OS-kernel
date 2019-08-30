@@ -9,6 +9,7 @@ PCB_LIST* System::allThreads = new PCB_LIST();
 Thread* System::idleThread = new Idle();
 TIME_BLCK_LIST* System::timeBlockList = new TIME_BLCK_LIST();
 IVTEntry* System::interruptEntries[256];
+int System::globallyBlockedSignals[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 int System::tstBrojac = 0;
 
 volatile unsigned int System::runningTimeCntr=20;
@@ -54,8 +55,17 @@ void interrupt timer(...){
 			if(PCB::runnig->state==PCB::READY && PCB::runnig!= System::idleThread->myPCB) Scheduler::put((PCB*)PCB::runnig);
 			PCB::runnig=Scheduler::get();
 
+			if(PCB::runnig==PCB::main){
+				Scheduler::put((PCB*)PCB::runnig);
+				PCB::runnig=Scheduler::get();
+			}
+
+			if(PCB::runnig!=0){
+				PCB::runnig->updateSignalWaitgList();
+			}
+
 			if(PCB::runnig==0){
-				cout<<brojac<<") running==0"<<endl;
+				//cout<<brojac<<") running==0"<<endl;
 				brojac++;
 				PCB::runnig = System::idleThread->myPCB;
 			}

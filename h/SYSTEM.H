@@ -30,6 +30,7 @@ public:
 	static volatile unsigned int lockFlag;
 	static volatile unsigned int context_switch_on_demand;
 	static IVTEntry* interruptEntries[256];
+	static int globallyBlockedSignals[16];
 
 	static void inic();
 	static void restore();

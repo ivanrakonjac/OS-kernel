@@ -1,5 +1,7 @@
 #include "PCBLIST.H"
 #include "PCB.H"
+#include "SCHEDULE.H"
+#include "SYSTEM.H"
 
 int PCB_LIST::insert(PCB* pcb){
 	Node* newNode = new Node (pcb);
@@ -37,6 +39,8 @@ int PCB_LIST::remove(PCB* pcb){
 	if(temp->next == 0){
 		last = prev;
 	}
+
+	delete temp;
 
 	return 1;
 }
@@ -76,6 +80,10 @@ PCB_LIST::~PCB_LIST(){
 
 	while(first){
 		temp = first;
+
+		//temp->node->setState(PCB::READY);
+		//Scheduler::put(temp->node);
+
 		first = first->next;
 		delete temp;
 	}

@@ -5,6 +5,8 @@
 #include "THREAD.H"
 #include "PCBLIST.H"
 #include "SCHEDULE.H"
+#include "SIGNLIST.H"
+#include "EXEWAIT.H"
 
 int PCB::ajdi=0;
 PCB* PCB::runnig= new PCB();
@@ -23,6 +25,14 @@ PCB::PCB(){
 	sp=0;
 	ss=0;
 	bp=0;
+
+	signalCounter=0;
+	signalsWaitngForExecution=0;
+	owner=0;
+	for(int brojac=0;brojac<16;++brojac){
+		signalArray[brojac]=0;
+		signalBlockArray[brojac]=0;
+	}
 }
 
 PCB::PCB(unsigned long stackSize, unsigned int timeSlice, Thread* myTr){
@@ -51,12 +61,28 @@ PCB::PCB(unsigned long stackSize, unsigned int timeSlice, Thread* myTr){
 
 		System::allThreads->insert(this);
 
+		signalCounter=0;
+		this->signalsWaitngForExecution = new ExecutionWaitingList();
+		this->owner = PCB::runnig;
+		for(int brojac=0;brojac<16;++brojac){
+			signalArray[brojac]=0;
+			signalBlockArray[brojac]=0;
+		}
+
+		if(owner!=0){
+			for(int brojac=0;brojac<16;++brojac){
+				signalBlockArray[brojac]=owner->signalBlockArray[brojac];
+			}
+		}
+
 		asm sti;
 }
 
 PCB::~PCB(){
-	System::allThreads->remove(this);
+	delete signalsWaitngForExecution;
 	delete blockedOnThread;
+
+	System::allThreads->remove(this);
 	if(this->stack)
 		delete [] this->stack;
 }
@@ -67,7 +93,6 @@ void PCB::start(){
 		if(this != System::idleThread->myPCB){
 			this->state = PCB::READY;
 			Scheduler::put((PCB*)this);
-			cout<<"ID: "<<this->getID()<<" | state: "<<this->getState()<<endl;
 		}
 	}
 	unlock
@@ -76,21 +101,11 @@ void PCB::start(){
 void PCB::waitToComplete(){
 	lock
 	if(this->myThread == System::idleThread->myPCB || this==runnig){
-		lock
-		cout<<"this==running"<<endl;
-		unlock
 		return;
 	}
 	if(this->state == FINISHED || this->state == NEW ) {
-		lock
-		cout<<"NIT: "<<getID()<<" state mismatch state="<<state<<endl;
-		unlock
 		return;
 	}
-
-	cout<<"--------PCB::waitToComplete()-----------"<<endl;
-	cout<<"running: "<<PCB::runnig->getID()<<" je blokirana"<<endl;
-	cout<<"----------------------------------------"<<endl;
 	runnig->state = BLOCKED;
 	blockedOnThread->insert(runnig);
 
@@ -112,7 +127,83 @@ void PCB::wrapper(){
 		temp->state = READY;
 		Scheduler::put(temp);
 	}
+
+	if (PCB::runnig->owner!=0) {
+		PCB::runnig->owner->signal(1);
+	}
+
+	PCB::runnig->signal(2);
+
 	PCB::runnig->state = PCB::FINISHED;
 	unlock
 	System::dispatch();
+}
+
+void PCB::blockSignal(SignalId id){
+	signalBlockArray[id]=1;
+}
+void PCB::unblockSignal(SignalId id){
+	signalBlockArray[id]=0;
+}
+
+void PCB::registerHandler(SignalId id,SignalHandler sh){
+	if(signalArray[id]==0){
+		signalArray[id] = new SignalHandlerList();
+		signalArray[id]->addToTheEnd(sh);
+	}
+	else{
+		signalArray[id]->addToTheEnd(sh);
+	}
+}
+
+void PCB::swap(SignalId id,SignalHandler sh1,SignalHandler sh2){
+	if(signalArray[id]==0) return;
+	signalArray[id]->swap(sh1,sh2);
+}
+
+void PCB::unregisterAllHandlers(SignalId id){
+	if(signalArray[id]==0) return;
+	signalArray[id]->~SignalHandlerList();
+}
+
+void PCB::signal(SignalId id){
+	if(id==1 || id==2) return; //sistemski signali
+
+	this->signalsWaitngForExecution->add(id);
+	this->signalCounter+=1;
+}
+
+void PCB::updateSignalWaitgList(){
+	int cntr2=0;
+	for(int i=0;i<signalCounter;++i){
+		unsigned id = signalsWaitngForExecution->popFirst();
+
+
+		if(System::globallyBlockedSignals[id]==1){
+
+			signalsWaitngForExecution->add(id);
+			++cntr2;
+		}
+		else if(signalBlockArray[id] == 1){
+			signalsWaitngForExecution->add(id);
+			++cntr2;
+		}
+		else if(id==0){
+			this->state = PCB::FINISHED;
+			System::dispatch();
+		}
+		else{
+			SignalHandlerList* shl = signalArray[id];
+			SignalHandlerList::SignalHandlerNode* temp = shl->first;
+
+			while(temp){
+				temp->signalHandler();
+				temp = temp->n;
+			}
+
+		}
+
+	}
+
+	signalCounter = cntr2;
 }
