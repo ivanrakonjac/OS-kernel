@@ -4,6 +4,7 @@
 #include "SYSTEM.H"
 
 int PCB_LIST::insert(PCB* pcb){
+	lock
 	Node* newNode = new Node (pcb);
 
 	if(first == 0){
@@ -14,11 +15,12 @@ int PCB_LIST::insert(PCB* pcb){
 		last->next = newNode;
 		last = last->next;
 	}
-
+	unlock
 	return 1;
 }
 
 int PCB_LIST::remove(PCB* pcb){
+	lock
 	Node* temp = first;
 	Node* prev = 0;
 
@@ -27,7 +29,10 @@ int PCB_LIST::remove(PCB* pcb){
 		temp = temp->next;
 	}
 
-	if(temp == 0) return 0;
+	if(temp == 0) {
+		unlock
+		return 0;
+	}
 
 	if(prev == 0){
 		first = temp->next;
@@ -41,26 +46,43 @@ int PCB_LIST::remove(PCB* pcb){
 	}
 
 	delete temp;
-
+	unlock
 	return 1;
 }
 
 PCB* PCB_LIST::getPCBwithID(int id){
-	if(first == 0) return 0;
-	if(id<0) return 0;
+	lock
+	if(first == 0){
+		unlock
+		return 0;
+	}
+	if(id<0){
+		unlock
+		return 0;
+	}
 
 	Node* temp;
 
 	for(temp = first ; temp != 0; temp = temp->next){
-		if(temp->node->getID() == id) return temp->node;
+		if(temp->node->getID() == id){
+			unlock
+			return temp->node;
+		}
 	}
 
-	if(temp == 0) return 0;
+	if(temp == 0){
+		unlock
+		return 0;
+	}
 
 }
 
 PCB* PCB_LIST::popFront(){
-	if(first == 0) return 0;
+	lock
+	if(first == 0){
+		unlock
+		return 0;
+	}
 
 	Node* temp = first;
 
@@ -72,21 +94,22 @@ PCB* PCB_LIST::popFront(){
 
 	delete temp;
 
+	unlock
 	return pcb;
 }
 
 PCB_LIST::~PCB_LIST(){
+	asm cli;
 	Node* temp=0;
 
 	while(first){
 		temp = first;
 
-		//temp->node->setState(PCB::READY);
-		//Scheduler::put(temp->node);
-
 		first = first->next;
 		delete temp;
 	}
+	first=last=0;
+	asm sti;
 }
 
 

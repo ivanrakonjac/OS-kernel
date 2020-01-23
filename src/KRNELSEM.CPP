@@ -6,64 +6,72 @@
 #include "SCHEDULE.H"
 
 KernelSem::KernelSem(int inic){
+	asm cli;
 	value = inic;
-	lock
 	blockList = new PCB_LIST();
-	unlock
+	asm sti;
 }
 
 KernelSem::~KernelSem(){
-	lock
+	asm cli;
 	delete blockList;
-	unlock
+	asm sti;
 }
 
 int KernelSem::wait(int maxTimeToWait){
-	value = value - 1;
 
 	asm cli;
-
-	if(value>=0){
-		asm sti
-		return 1;
-	}
 
 	PCB::runnig->setState(PCB::BLOCKED);
 
 	if(maxTimeToWait == 0){
+		value = value - 1;
+
+		if(value>=0){
+			asm sti;
+			return 1;
+		}
+
 		blockList->insert(PCB::runnig);
 	}
 	else{
 		System::timeBlockList->insert(PCB::runnig,maxTimeToWait,this);
 	}
 
+	asm sti;
+
 	System::dispatch();
 
-	asm sti
-
-	if(!PCB::runnig->getSignalWoken()){
+	/*if(!PCB::runnig->getSignalWoken()){
 		PCB::runnig->setSignalWoken(0);
 		return 0;
-	}
+	}*/
 
-	return 1;
+	return 0;
 }
 
 int KernelSem::signal(int n){
-	asm cli
+	asm cli;
 
-	if(n<0) return n;
+	if(n<0){
+		asm sti;
+		return n;
+	}
 	else if(n == 0 ){
 		value = value + 1;
 
 		PCB* temp = blockList->popFront();
-		if(temp == 0) return n;
+		if(temp == 0){
+			asm sti;
+			return n;
+		}
 
 		temp->setState(PCB::READY);
-		temp->setSignalWoken(1);
+		//temp->setSignalWoken(1);
 
-		Scheduler::put(temp);
+		if(temp!=PCB::main) Scheduler::put(temp);
 
+		asm sti;
 		return 0;
 	}
 	else if(n>0){
@@ -72,18 +80,19 @@ int KernelSem::signal(int n){
 
 		for (int i= 0; i < n; ++i) {
 			PCB* temp = blockList->popFront();
-			if(temp == 0) return cntr;
+			if(temp == 0){
+				asm sti;
+				return cntr;
+			}
 
 			temp->setState(PCB::READY);
-			temp->setSignalWoken(1);
+			//temp->setSignalWoken(1);
 
-			Scheduler::put(temp);
+			if(temp!=PCB::main) Scheduler::put(temp);
 		}
 		asm sti;
 		return cntr;
 	}
-	asm sti
-
 }
 
 int KernelSem::val() const{

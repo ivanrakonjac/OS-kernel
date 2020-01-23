@@ -2,11 +2,11 @@
 #include "PCB.H"
 #include "SCHEDULE.H"
 #include "KRNELSEM.H"
+#include "SYSTEM.H"
 #include <iostream.h>
-
+/*
 int TIME_BLCK_LIST::insert(PCB* pcb,Time maxTime,KernelSem* sem){
-
-    if(maxTime<0) return 0;
+	lock
 
 	timeNode* newNode = new timeNode (pcb,maxTime,sem);
 	timeNode* temp = first;
@@ -16,6 +16,97 @@ int TIME_BLCK_LIST::insert(PCB* pcb,Time maxTime,KernelSem* sem){
 		first = newNode;
 		last=first;
 
+		unlock
+		return 1;
+	}
+
+	if(newNode->time <= first->time){
+		newNode->next = first;
+		first = newNode;
+
+		unlock
+		return 1;
+	}
+
+	if(newNode->time>=last->time){
+		last->next=newNode;
+		last=newNode;
+
+		unlock
+		return 1;
+	}
+
+	while(first->next->time<maxTime){
+		temp=temp->next;
+	}
+	newNode->next=temp->next;
+	temp->next=newNode;
+
+	unlock
+	return 1;
+}
+
+void TIME_BLCK_LIST::update(){
+	lock
+
+	if(first==0){
+		unlock
+		return;
+	}
+
+	timeNode* temp=first;
+	timeNode* old=0;
+
+	while(temp!=0){
+		temp->decTime();
+		temp=temp->next;
+	}
+
+	while(first->time==0){
+		old=first;
+		first=first->next;
+		if(first==0) last=0;
+		old->data->setState(PCB::READY);
+		if(old->data!=PCB::main) Scheduler::put(old->data);
+
+		delete old;
+	}
+
+	unlock
+}
+
+TIME_BLCK_LIST::~TIME_BLCK_LIST(){
+	asm cli;
+	timeNode* temp=0;
+
+	while(first){
+		temp = first;
+		first = first->next;
+		delete temp;
+	}
+	asm sti;
+}
+*/
+
+
+
+int TIME_BLCK_LIST::insert(PCB* pcb,Time maxTime,KernelSem* sem){
+	lock
+
+    if(maxTime<0){
+    	unlock
+    	return 0;
+    }
+
+	timeNode* newNode = new timeNode (pcb,maxTime,sem);
+	timeNode* temp = first;
+	timeNode* prev = 0;
+
+	if(first == 0){
+		first = newNode;
+		last=first;
+
+		unlock
 		return 1;
 	}
 
@@ -25,6 +116,7 @@ int TIME_BLCK_LIST::insert(PCB* pcb,Time maxTime,KernelSem* sem){
 	    first = newNode;
 	    first->next->time -= newNode->time;
 
+	    unlock
 	    return 1;
 	}
 
@@ -41,6 +133,7 @@ int TIME_BLCK_LIST::insert(PCB* pcb,Time maxTime,KernelSem* sem){
 	        newNode->next = temp;
 	        temp->time -= newNode->time;
 
+	        unlock
 	        return 1;
 	    }
 	    else{
@@ -48,15 +141,21 @@ int TIME_BLCK_LIST::insert(PCB* pcb,Time maxTime,KernelSem* sem){
 	        newNode->next = 0;
 	        last = newNode;
 
+	        unlock
 	        return 1;
 	    }
 
+	    unlock
 	    return 1;
 	}
 }
 
 TIME_BLCK_LIST::timeNode* TIME_BLCK_LIST::popFront(){
-	if(first == 0) return 0;
+	lock
+	if(first == 0){
+		unlock
+		return 0;
+	}
 
 	timeNode* temp = first;
 
@@ -64,10 +163,12 @@ TIME_BLCK_LIST::timeNode* TIME_BLCK_LIST::popFront(){
 
 	if(first == 0) last = 0;
 
+	unlock
 	return temp;
 }
 
 TIME_BLCK_LIST::~TIME_BLCK_LIST(){
+	asm cli;
 	timeNode* temp=0;
 
 	while(first){
@@ -75,6 +176,7 @@ TIME_BLCK_LIST::~TIME_BLCK_LIST(){
 		first = first->next;
 		delete temp;
 	}
+	asm sti;
 }
 
 void TIME_BLCK_LIST::stampaj(){
@@ -87,18 +189,20 @@ void TIME_BLCK_LIST::stampaj(){
 }
 
 void TIME_BLCK_LIST::update(){
+	lock
 	first->decTime();
 	while(first && first->time==0){
 
 		timeNode* temp =this->popFront();
 
 		temp->data->setState(PCB::READY);
-		temp->data->setSignalWoken(0);
-		temp->semaphor->incVal();
+		//temp->data->setSignalWoken(0);
+		//temp->semaphor->incVal();
 
 		//cout<<"SIGNAL(n): val = "<<temp->semaphor->val()<<endl;
 		//cout<<"PROBUDJENA NIT: "<<temp->data->getID()<<endl;
 
-		Scheduler::put(temp->data);
+		if(temp!=PCB::main) Scheduler::put(temp->data);
 	}
+	unlock
 }

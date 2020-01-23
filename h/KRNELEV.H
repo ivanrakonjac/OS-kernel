@@ -9,6 +9,7 @@ class KernelEv{
 	
 public:
 	KernelEv(IVTNo ivtNo, Event* e);
+	~KernelEv();
 	void wait();
 	void signal();
 

@@ -9,12 +9,13 @@ PCB_LIST* System::allThreads = new PCB_LIST();
 Thread* System::idleThread = new Idle();
 TIME_BLCK_LIST* System::timeBlockList = new TIME_BLCK_LIST();
 IVTEntry* System::interruptEntries[256];
-int System::globallyBlockedSignals[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+//int System::globallyBlockedSignals[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 int System::tstBrojac = 0;
 
 volatile unsigned int System::runningTimeCntr=20;
 volatile unsigned int System::lockFlag=1;
 volatile unsigned int System::context_switch_on_demand=0;
+volatile int System::numberOfUserThreads=0;
 
 pInterrupt oldTimer;
 unsigned stara=0x8;
@@ -38,6 +39,8 @@ void interrupt timer(...){
 		System::timeBlockList->update();
 	}
 
+	if (!System::context_switch_on_demand && PCB::runnig->quantum==0) return;
+
 	if (System::runningTimeCntr == 0 || System::context_switch_on_demand) {
 		if(System::lockFlag){
 			System::context_switch_on_demand=0;
@@ -52,23 +55,31 @@ void interrupt timer(...){
 			PCB::runnig->ss=tss;
 			PCB::runnig->bp=tbp;
 
-			if(PCB::runnig->state==PCB::READY && PCB::runnig!= System::idleThread->myPCB) Scheduler::put((PCB*)PCB::runnig);
+			if(PCB::runnig->state==PCB::READY && PCB::runnig!= System::idleThread->myPCB && PCB::runnig!=PCB::main) Scheduler::put((PCB*)PCB::runnig);
 			PCB::runnig=Scheduler::get();
 
-			if(PCB::runnig==PCB::main){
-				Scheduler::put((PCB*)PCB::runnig);
-				PCB::runnig=Scheduler::get();
-			}
 
-			if(PCB::runnig!=0){
+			/*if(PCB::runnig!=0){
 				PCB::runnig->updateSignalWaitgList();
-			}
+			}*/
 
 			if(PCB::runnig==0){
-				//cout<<brojac<<") running==0"<<endl;
-				brojac++;
-				PCB::runnig = System::idleThread->myPCB;
+				if(System::numberOfUserThreads>0) {
+					PCB::runnig = System::idleThread->myPCB;
+				}
+				else{
+					if(PCB::main->getState()==PCB::BLOCKED) {
+						PCB::runnig = System::idleThread->myPCB;
+					}
+					PCB::runnig = PCB::main;
+				}
 			}
+
+			/*if(PCB::runnig == System::idleThread->myPCB) {
+				asm cli;
+				cout << "Broju user niti je " << System::numberOfUserThreads << "\n";
+				asm sti;
+			}*/
 
 			tsp = PCB::runnig->sp;
 			tss = PCB::runnig->ss;
@@ -97,7 +108,6 @@ void interrupt timer(...){
 	// samo kada je stvarno doslo do prekida
 	if(!System::context_switch_on_demand) asm int 60h;
 
-	//context_switch_on_demand = 0;
 }
 
 // postavlja novu prekidnu rutinu
@@ -109,6 +119,10 @@ void System::inic(){
 	setvect(stara,timer);
 	//staru premestam na 60h
 	setvect(nova,oldTimer);
+
+	PCB::main=new PCB();
+	PCB::runnig=PCB::main;
+
 	asm sti
 }
 
@@ -120,7 +134,7 @@ void System::restore(){
 	delete System::allThreads;
 	delete System::idleThread;
 	delete PCB::main;
-	delete PCB::runnig;
+	//delete PCB::runnig;
 	asm sti
 }
 

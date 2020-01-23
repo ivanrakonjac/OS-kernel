@@ -3,7 +3,7 @@
 #include "SYSTEM.H"
 
 IVTEntry::IVTEntry(IVTNo num,void interrupt(*newEvent)(...)){
-	asm cli
+	asm cli;
 	this->oldInterrupt = 0;
 
 	oldInterrupt = getvect(num);
@@ -14,14 +14,14 @@ IVTEntry::IVTEntry(IVTNo num,void interrupt(*newEvent)(...)){
 
 	System::interruptEntries[num] = this;
 
-	asm sti
+	asm sti;
 }
 
 IVTEntry::~IVTEntry(){
-	asm cli
+	asm cli;
 	setvect(ivtNumber,oldInterrupt);
 	System::interruptEntries[ivtNumber] = 0;
-	asm sti
+	asm sti;
 }
 
 void IVTEntry::signal(IVTNo num){

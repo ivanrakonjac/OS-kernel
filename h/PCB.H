@@ -7,8 +7,8 @@
 
 class Thread;
 class PCB_LIST;
-class SignalHandlerList;
-class ExecutionWaitingList;
+//class SignalHandlerList;
+//class ExecutionWaitingList;
 
 class PCB{
 
@@ -39,9 +39,9 @@ public:
 	Thread* getThread() const{
 		return this->myThread;
 	}
-	int getSignalWoken() const{
+/*	int getSignalWoken() const{
 		return this->signalWoken;
-	}
+	}*/
 
 
 	void setID(int id){
@@ -50,9 +50,9 @@ public:
 	void setState(State s){
 		this->state = s;
 	}
-	void setSignalWoken(int i){
+/*	void setSignalWoken(int i){
 		this->signalWoken = i;
-	}
+	}*/
 
 
 	static int getRunningId(){
@@ -61,7 +61,7 @@ public:
 
 	static void wrapper();
 
-
+/*
 	void signal(SignalId signal);
 
 	void registerHandler(SignalId signal, SignalHandler handler);
@@ -73,7 +73,7 @@ public:
 	void unblockSignal(SignalId signal);
 
 	void updateSignalWaitgList();
-
+*/
 
 private:
 
@@ -91,10 +91,10 @@ private:
 	PCB_LIST* blockedOnThread;
 
 	PCB* owner;
-	int signalCounter;
-	SignalHandlerList* signalArray[16];
-	int signalBlockArray[16];
-	ExecutionWaitingList* signalsWaitngForExecution;
+//	int signalCounter;
+//	SignalHandlerList* signalArray[16];
+//	int signalBlockArray[16];
+//	ExecutionWaitingList* signalsWaitngForExecution;
 
 
 

@@ -41,7 +41,7 @@ Thread::~Thread(){
 void dispatch(){
 	System::dispatch();
 }
-
+/*
 void Thread::blockSignalGlobally(SignalId id){
 	System::globallyBlockedSignals[id]=1;
 }
@@ -84,3 +84,4 @@ void Thread::unblockSignal(SignalId id){
 	myPCB->unblockSignal(id);
 	unlock
 }
+*/

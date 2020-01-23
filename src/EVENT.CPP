@@ -11,9 +11,9 @@ Event::Event(IVTNo n){
 }
 
 Event::~Event(){
-	lock
+	asm cli;
 	delete myImpl;
-	unlock
+	asm sti;
 }
 
 void Event::wait(){

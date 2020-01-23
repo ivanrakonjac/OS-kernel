@@ -1,6 +1,6 @@
 #include "KRNELEV.H"
 #include "PCB.H"
-//#include "EVENT.H"
+#include "EVENT.H"
 #include "System.H"
 #include "Schedule.h"
 
@@ -12,24 +12,28 @@ KernelEv::KernelEv(IVTNo ivtNo, Event* e){
 }
 
 void KernelEv::wait(){
+	asm cli;
 	if(PCB::runnig == owner){
-		asm cli
 		PCB::runnig->setState(PCB::BLOCKED);
+		asm sti;
 		System::dispatch();
-		asm sti
-		return;
-		asm sti
 		return;
 	}
-	else return;
+	else{
+		asm sti;
+		return;
+	}
 }
 
 void KernelEv::signal(){
+	asm cli;
 	System::tstBrojac++;
-	asm cli
 	owner->setState(PCB::READY);
-	Scheduler::put(owner);
-	System::dispatch();
+	if(owner!=PCB::main) Scheduler::put(owner);
 	asm sti;
 	return;
+}
+
+KernelEv::~KernelEv(){
+	System::interruptEntries[this->ivtKeNumber]->setEvent(0);
 }
