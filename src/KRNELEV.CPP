@@ -8,30 +8,41 @@ KernelEv::KernelEv(IVTNo ivtNo, Event* e){
 	this->ivtKeNumber = ivtNo;
 	this->event = e;
 	this->owner = PCB::runnig;
-	this->value = 0;
+	this->value = 1;
+	this->blokiranaNit=0;
 }
 
 void KernelEv::wait(){
-	asm cli;
+	lock
 	if(PCB::runnig == owner){
-		PCB::runnig->setState(PCB::BLOCKED);
-		asm sti;
-		System::dispatch();
-		return;
+		if(this->value==0){
+			this->blokiranaNit=(PCB*)PCB::runnig;
+			PCB::runnig->setState(PCB::BLOCKED);
+			unlock
+			System::dispatch();
+			return;
+		}
+		else{
+			if(this->value==1) value=0;
+		}
 	}
 	else{
-		asm sti;
+		unlock
 		return;
 	}
 }
 
 void KernelEv::signal(){
-	asm cli;
+	lock
 	System::tstBrojac++;
-	owner->setState(PCB::READY);
-	if(owner!=PCB::main) Scheduler::put(owner);
-	asm sti;
-	return;
+	if(blokiranaNit == 0) value = 1;
+	else{
+		owner->setState(PCB::READY);
+		if(owner!=PCB::main) Scheduler::put(owner);
+		unlock
+		return;
+	}
+	unlock
 }
 
 KernelEv::~KernelEv(){

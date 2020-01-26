@@ -18,6 +18,7 @@ private:
 	IVTNo ivtKeNumber;
 	Event* event;
 	PCB* owner;
+	PCB* blokiranaNit;
 };
 
 #endif
