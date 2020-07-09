@@ -4,6 +4,7 @@
 #include <iostream.h>
 #include <dos.h>
 #include "Thread.h"
+#include "system.h"
 
 class Thread;
 class PCB_LIST;
@@ -19,6 +20,8 @@ public:
 	static PCB* main;
 
 	enum State { READY, BLOCKED, FINISHED, NEW };
+
+	static int pcbNum;
 
 	PCB();
 	PCB(unsigned long stackSize, unsigned int timeSlice, Thread* myTr);
@@ -50,6 +53,12 @@ public:
 	void setState(State s){
 		this->state = s;
 	}
+	void setTimeUnblock(int val){
+		this->timeUnblock=val;
+	}
+	int getTimeUnblock(){
+		return this->timeUnblock;
+	}
 /*	void setSignalWoken(int i){
 		this->signalWoken = i;
 	}*/
@@ -75,6 +84,10 @@ public:
 	void updateSignalWaitgList();
 */
 
+	PCB_LIST* getListu(){
+		return this->blockedOnThread;
+	}
+
 private:
 
 	friend void interrupt timer(...);
@@ -89,6 +102,7 @@ private:
 	int signalWoken;
 	Thread* myThread;
 	PCB_LIST* blockedOnThread;
+	int timeUnblock;
 
 	PCB* owner;
 //	int signalCounter;

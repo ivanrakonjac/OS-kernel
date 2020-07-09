@@ -4,6 +4,8 @@
 class PCB;
 
 class PCB_LIST{
+public:
+	static int nodeNum;
 	class Node{
 		public:
 			PCB* node;
@@ -11,6 +13,10 @@ class PCB_LIST{
 			Node(PCB* node,Node* next=0){
 				this->node = node;
 				this->next = next;
+				PCB_LIST::nodeNum++;
+			}
+			~Node(){
+				PCB_LIST::nodeNum--;
 			}
 	};
 
@@ -27,6 +33,7 @@ public:
 
 	PCB* getPCBwithID(int ind);
 	PCB* popFront();
+	void stampaj();
 
 	Node* first;
 	Node* last;

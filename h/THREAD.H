@@ -15,6 +15,7 @@ typedef int ID;
 
 class PCB; // Kernel's implementation of a user's thread
 class Idle;
+class PCB_LIST;
 
 class Thread {
 	public:
@@ -26,6 +27,8 @@ class Thread {
 	 	ID getId();
 	 	static ID getRunningId();
 	 	static Thread * getThreadById(ID id);
+
+	 	static int threadNum;
 
 /*
 	 	void signal(SignalId signal);
@@ -41,6 +44,7 @@ class Thread {
 		static void blockSignalGlobally(SignalId signal);
 		static void unblockSignalGlobally(SignalId signal);
 */
+
 	protected:
 
 		Thread (StackSize stackSize = defaultStackSize, Time timeSlice = defaultTimeSlice);

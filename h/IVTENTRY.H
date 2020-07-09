@@ -3,26 +3,37 @@
 
 #include "Event.h"
 
+typedef void interrupt (*pInterrupt)(...);
+
+#define PREPAREENTRY(numEntry,callOld)\
+	void interrupt inter##numEntry(...);\
+	IVTEntry newEntry##numEntry(numEntry,inter##numEntry);\
+	void interrupt inter##numEntry(...){\
+	newEntry##numEntry.signal();\
+	if (callOld==1) newEntry##numEntry.callOldRoutine();\
+}
+
 class IVTEntry{
 	
 public:
-	IVTEntry(IVTNo number, void interrupt(*newEvent)(...));
+	IVTEntry(unsigned numEntry, pInterrupt newRout);
 	~IVTEntry();
 
-	static void signal(IVTNo number);
-	static void useOld(IVTNo number);
+	void signal();
+	void callOldRoutine();
 
-	KernelEv* getEvent(){
+	/*KernelEv* getEvent(){
 		return this->kernEvent;
 	}
 	void setEvent(KernelEv* kev){
 		this->kernEvent = kev;
-	}
+	}*/
 
 private:
-	void interrupt (*oldInterrupt)(...);
+	friend class KernelEv;
+	pInterrupt oldRout;
 	KernelEv* kernEvent;
-	IVTNo ivtNumber;
+	unsigned numEntry;
 };
 
 #endif

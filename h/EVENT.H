@@ -3,18 +3,6 @@
 
 typedef unsigned char IVTNo;
 
-class KernelEv;
-
-#include "IVTENTRY.H"
-
-#define PREPAREENTRY(number,flag)\
-void interrupt intRut_##number(...);\
-IVTEntry ivtEntry_##number(number,intRut_##number);\
-void interrupt intRut_##number(...){\
-	IVTEntry::signal(number);\
-	if(flag) IVTEntry::useOld(number);\
-}\
-
 class Event {
 
 public:

@@ -3,6 +3,8 @@
 #include "SYSTEM.H"
 #include "PCBLIST.H"
 
+int Thread::threadNum=0;
+
 
 void Thread::start(){
 	this->myPCB->start();
@@ -10,7 +12,6 @@ void Thread::start(){
 
 void Thread::waitToComplete(){
 	this->myPCB->waitToComplete();
-
 }
 
 ID Thread::getId(){
@@ -28,6 +29,9 @@ Thread* Thread::getThreadById(int id){
 
 Thread::Thread(StackSize ss,Time ts){
 	myPCB = new PCB(ss,ts,this);
+	lock
+	Thread::threadNum=Thread::threadNum + 1;
+	unlock
 }
 
 Thread::~Thread(){
@@ -35,6 +39,7 @@ Thread::~Thread(){
 
 	lock
 	delete myPCB;
+	Thread::threadNum=Thread::threadNum - 1;
 	unlock
 }
 

@@ -5,12 +5,14 @@
 #include "THREAD.H"
 #include "PCBLIST.H"
 #include "SCHEDULE.H"
+#include <iostream.h>
 //#include "SIGNLIST.H"
 //#include "EXEWAIT.H"
 
 int PCB::ajdi=0;
 PCB* PCB::runnig= new PCB();
 PCB* PCB::main = PCB::runnig;
+int PCB::pcbNum=0;
 
 PCB::PCB(){
 	state=PCB::READY;
@@ -19,6 +21,9 @@ PCB::PCB(){
 	myThread=0;
 	blockedOnThread=0;
 	//signalWoken = 0;
+	timeUnblock=0;
+
+	PCB::pcbNum=PCB::pcbNum+1;
 
 	stack=0;
 
@@ -43,6 +48,9 @@ PCB::PCB(unsigned long stackSize, unsigned int timeSlice, Thread* myTr){
 		//this->signalWoken = 0;
 		this->myThread=myTr;
 		this->blockedOnThread = new PCB_LIST();
+		this->timeUnblock=0;
+
+		PCB::pcbNum=PCB::pcbNum+1;
 
 		asm cli;
 
@@ -79,11 +87,19 @@ PCB::PCB(unsigned long stackSize, unsigned int timeSlice, Thread* myTr){
 }
 
 PCB::~PCB(){
+	/*lock
+	cout<<"Brise se PCB: "<<this->id<<endl;
+	unlock*/
 	asm cli
 	//delete signalsWaitngForExecution;
 	delete blockedOnThread;
 
 	System::allThreads->remove(this);
+
+	PCB::pcbNum=PCB::pcbNum-1;
+
+	//cout<<"Sklonjena iz liste - "<<System::allThreads->remove(this)<<endl;
+
 	if(this->stack)
 		delete [] this->stack;
 	asm sti
@@ -102,7 +118,9 @@ void PCB::start(){
 }
 
 void PCB::waitToComplete(){
+
 	lock
+
 	if(this->myThread == System::idleThread->myPCB || this==runnig){
 		unlock
 		return;
@@ -113,6 +131,7 @@ void PCB::waitToComplete(){
 	}
 	runnig->state = BLOCKED;
 	blockedOnThread->insert(runnig);
+
 
 	unlock
 
@@ -129,7 +148,7 @@ void PCB::wrapper(){
 	for(temp;temp!=0;temp=runnig->blockedOnThread->popFront()){
 		temp->state = READY;
 
-		if(temp!=PCB::main) Scheduler::put(temp);
+		Scheduler::put(temp);
 	}
 
 	/*if (PCB::runnig->owner!=0) {

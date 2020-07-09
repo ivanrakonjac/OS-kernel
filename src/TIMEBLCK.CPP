@@ -151,8 +151,15 @@ int TIME_BLCK_LIST::insert(PCB* pcb,Time maxTime,KernelSem* sem){
 }
 
 TIME_BLCK_LIST::timeNode* TIME_BLCK_LIST::popFront(){
+	/*lock
+	cout<<"Prvi u time block listi:"<<first<<endl;
+	cout<<"Running:"<<PCB::runnig<<endl;
+	unlock*/
+
+
 	lock
 	if(first == 0){
+		//cout<<"PRAZNAAA"<<endl;
 		unlock
 		return 0;
 	}
@@ -161,7 +168,9 @@ TIME_BLCK_LIST::timeNode* TIME_BLCK_LIST::popFront(){
 
 	first = first->next;
 
-	if(first == 0) last = 0;
+	if(first == 0){
+		last = 0;
+	}
 
 	unlock
 	return temp;
@@ -169,13 +178,23 @@ TIME_BLCK_LIST::timeNode* TIME_BLCK_LIST::popFront(){
 
 TIME_BLCK_LIST::~TIME_BLCK_LIST(){
 	asm cli;
-	timeNode* temp=0;
 
 	while(first){
-		temp = first;
-		first = first->next;
+
+		timeNode* temp=this->popFront();
+
+		//ako je ostala neka nit zablokirana
+		PCB* pcb=temp->data;
+		if(pcb->getState()==PCB::BLOCKED){
+			pcb->setState(PCB::READY);
+			Scheduler::put(pcb);
+		}
+
 		delete temp;
 	}
+
+	first=last=0;
+
 	asm sti;
 }
 
@@ -190,19 +209,30 @@ void TIME_BLCK_LIST::stampaj(){
 
 void TIME_BLCK_LIST::update(){
 	lock
+	if(first==0){
+		//cout<<"Ovde nema nikog"<<endl;
+		unlock
+		return;
+	}
 	first->decTime();
 	while(first && first->time==0){
 
 		timeNode* temp =this->popFront();
 
+		//povecam vrednost na sem jer sam pustio nit
+		temp->semaphor->incVal();
+		//setujem da je PCB READY
 		temp->data->setState(PCB::READY);
+		//setujem da je probudjen zbog isteka vremena
+		temp->data->setTimeUnblock(1);
+
 		//temp->data->setSignalWoken(0);
 		//temp->semaphor->incVal();
 
 		//cout<<"SIGNAL(n): val = "<<temp->semaphor->val()<<endl;
 		//cout<<"PROBUDJENA NIT: "<<temp->data->getID()<<endl;
 
-		if(temp!=PCB::main) Scheduler::put(temp->data);
+		Scheduler::put(temp->data);
 	}
 	unlock
 }

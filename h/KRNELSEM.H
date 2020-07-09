@@ -15,8 +15,17 @@ public:
 
 	void incVal();
 
+	TIME_BLCK_LIST* getTimeBlockList(){
+		return timeBlockList;
+	}
+
+	PCB_LIST* getBlockList(){
+		return blockList;
+	}
+
 private:
 	PCB_LIST* blockList;
+	TIME_BLCK_LIST* timeBlockList;
 	int value;
 };
 

@@ -5,21 +5,23 @@
 
 Event::Event(IVTNo n){
 	lock
-	myImpl  = new KernelEv(n,this);
-	if(System::interruptEntries[n] !=0 ) System::interruptEntries[n]->setEvent(myImpl);
+	myImpl  = new KernelEv(n);
 	unlock
 }
 
 Event::~Event(){
-	asm cli;
+	lock
+	//cout<<"Brisem event: "<<this<<endl;
 	delete myImpl;
-	asm sti;
+	unlock
 }
 
 void Event::wait(){
+	//cout<<"Event::wait()"<<endl;
 	myImpl->wait();
 }
 
 void Event::signal(){
+	//cout<<"Event::signal()"<<endl;
 	myImpl->signal();
 }

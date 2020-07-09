@@ -2,33 +2,37 @@
 #include "KRNELEV.H"
 #include "SYSTEM.H"
 
-IVTEntry::IVTEntry(IVTNo num,void interrupt(*newEvent)(...)){
-	asm cli;
-	this->oldInterrupt = 0;
+IVTEntry::IVTEntry(unsigned numEntry,pInterrupt newRout){
+	lock
 
-	oldInterrupt = getvect(num);
-	setvect(num,newEvent);
+	this->numEntry=numEntry;
 
-	this->ivtNumber = num;
+	oldRout = getvect(numEntry);
+	setvect(numEntry,newRout);
+
 	this->kernEvent = 0;
 
-	System::interruptEntries[num] = this;
+	System::interruptEntries[this->numEntry]=this;
 
-	asm sti;
+	unlock
 }
 
 IVTEntry::~IVTEntry(){
 	asm cli;
-	setvect(ivtNumber,oldInterrupt);
-	System::interruptEntries[ivtNumber] = 0;
+	setvect(numEntry,oldRout);
+	System::interruptEntries[this->numEntry] = 0;
 	asm sti;
+
 }
 
-void IVTEntry::signal(IVTNo num){
-	if(System::interruptEntries[num]->kernEvent!=0)
-		System::interruptEntries[num]->kernEvent->signal();
+void IVTEntry::signal(){
+	if(this->kernEvent!=0){
+		kernEvent->signal();
+	}
 }
 
-void IVTEntry::useOld(IVTNo num){
-	System::interruptEntries[num]->oldInterrupt();
+void IVTEntry::callOldRoutine(){
+	this->oldRout();
 }
+
+

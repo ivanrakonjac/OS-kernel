@@ -2,6 +2,9 @@
 #include "PCB.H"
 #include "SCHEDULE.H"
 #include "SYSTEM.H"
+#include <iostream.h>
+
+int PCB_LIST::nodeNum=0;
 
 int PCB_LIST::insert(PCB* pcb){
 	lock
@@ -24,7 +27,8 @@ int PCB_LIST::remove(PCB* pcb){
 	Node* temp = first;
 	Node* prev = 0;
 
-	while(temp != 0 && temp->node != pcb){
+
+	while(temp != 0 && (temp->node != pcb)){
 		prev=temp;
 		temp = temp->next;
 	}
@@ -80,6 +84,7 @@ PCB* PCB_LIST::getPCBwithID(int id){
 PCB* PCB_LIST::popFront(){
 	lock
 	if(first == 0){
+		last=0;
 		unlock
 		return 0;
 	}
@@ -98,18 +103,39 @@ PCB* PCB_LIST::popFront(){
 	return pcb;
 }
 
+void PCB_LIST::stampaj(){
+	Node* temp = first;
+	while(temp){
+		lock
+		cout<<temp->node->getID()<<" ";
+		temp = temp->next;
+		unlock
+	}
+	lock
+	cout<<endl;
+	unlock
+}
+
 PCB_LIST::~PCB_LIST(){
-	asm cli;
-	Node* temp=0;
 
 	while(first){
-		temp = first;
 
-		first = first->next;
-		delete temp;
+
+		PCB* pcb = this->popFront(); //u popFront funkciji mi se obrise Node*
+
+		if(pcb==0){
+			break;
+		}
+
+		//ako je ostala neka nit zablokirana
+		if(pcb->getState()==PCB::BLOCKED){
+			cout<<"Ubacio sam nit "<<pcb->getID()<<endl;
+			pcb->setState(PCB::READY);
+			Scheduler::put(pcb);
+		}
+
 	}
 	first=last=0;
-	asm sti;
 }
 
 

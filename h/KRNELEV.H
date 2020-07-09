@@ -8,15 +8,19 @@ class PCB;
 class KernelEv{
 	
 public:
-	KernelEv(IVTNo ivtNo, Event* e);
+
+	static int kerEvNum;
+
+	KernelEv(unsigned ivtNo);
 	~KernelEv();
+
 	void wait();
 	void signal();
 
 private:
 	int value;
-	IVTNo ivtKeNumber;
-	Event* event;
+	unsigned entryNum;
+
 	PCB* owner;
 	PCB* blokiranaNit;
 };
