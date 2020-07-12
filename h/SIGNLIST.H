@@ -25,6 +25,9 @@ public:
 
 	void addToTheEnd(SignalHandler sh);
 	void swap(SignalHandler sh1,SignalHandler sh2);
+	void unregisterAllHandlers(unsigned id);
+
+	void stampaj();
 
 	SignalHandlerNode* first;
 	SignalHandlerNode* last;

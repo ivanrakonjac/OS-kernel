@@ -1,4 +1,6 @@
 #include "SIGNLIST.H"
+#include <iostream.h>
+#include "System.h"
 
 void SignalHandlerList::addToTheEnd(SignalHandler sh){
 	SignalHandlerNode* newNode = new SignalHandlerNode(sh);
@@ -64,3 +66,27 @@ void SignalHandlerList::swap(SignalHandler sh1,SignalHandler sh2){
 
 	return;
 }
+
+void SignalHandlerList::unregisterAllHandlers(unsigned id){
+	cout<<"Ukloni hendlere za "<<id<<endl;
+
+	while(SignalHandlerList::first){
+		SignalHandlerNode* temp = SignalHandlerList::first;
+		SignalHandlerList::first=SignalHandlerList::first->n;
+		delete temp;
+	}
+}
+
+void SignalHandlerList::stampaj(){
+	SignalHandlerNode* temp = SignalHandlerList::first;
+	while(temp){
+		lock
+		cout<<*(temp->signalHandler)<<" ";
+		unlock
+		temp = temp->n;
+	}
+	lock
+	cout<<endl;
+	unlock
+}
+

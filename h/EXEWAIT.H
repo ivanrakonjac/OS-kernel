@@ -1,6 +1,8 @@
 #ifndef _EXE_WAIT_SIG_H
 #define _EXE_WAIT_SIG_H
 
+#include "PCB.H"
+
 class ExecutionWaitingList{
 
 	class ExecNode{
@@ -14,9 +16,14 @@ class ExecutionWaitingList{
 	};
 
 public:
-	ExecutionWaitingList(){
+	ExecutionWaitingList(PCB* pcb){
+		lock
+		this->myPcb=pcb;
+		this->numOfSignalsWaitForExec=0;
+
 		this->first = 0;
 		this->last = 0;
+		unlock
 	}
 	~ExecutionWaitingList();
 
@@ -24,8 +31,31 @@ public:
 	unsigned popFirst();
 	void updateList();
 
+	int getNumOfSignalsWaitForExec(){
+		return this->numOfSignalsWaitForExec;
+	}
+	void incNumOfSignalsWaitForExec(){
+		this->numOfSignalsWaitForExec+=1;
+	}
+	void decNumOfSignalsWaitForExec(){
+		this->numOfSignalsWaitForExec-=1;
+	}
+
+	void stampaj();
+
+	ExecNode* getFirst(){
+		return this->first;
+	}
+
+protected:
+	void addWithoutIncrement(unsigned id);
+
+private:
+	PCB* myPcb;
+	unsigned numOfSignalsWaitForExec;
 	ExecNode* first;
 	ExecNode* last;
+
 };
 
 #endif

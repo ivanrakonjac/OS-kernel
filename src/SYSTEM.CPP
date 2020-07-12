@@ -13,7 +13,7 @@ PCB_LIST* System::allThreads = new PCB_LIST();
 SEM_LIST* System::allSem = new SEM_LIST();
 Thread* System::idleThread = new Idle();
 IVTEntry* System::interruptEntries[256]={0};
-//int System::globallyBlockedSignals[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+int System::globallyBlockedSignals[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 int System::tstBrojac = 0;
 
 volatile unsigned int System::runningTimeCntr=20;
@@ -76,10 +76,6 @@ void interrupt timer(...){
 				cout<<"PCB running posle sch"<<PCB::runnig<<" "<<PCB::runnig->getState()<<endl;
 			}
 
-			/*if(PCB::runnig!=0){
-				PCB::runnig->updateSignalWaitgList();
-			}*/
-
 			if(PCB::runnig==0){
 				if(System::numberOfUserThreads>0) {
 					PCB::runnig = System::idleThread->myPCB;
@@ -111,6 +107,17 @@ void interrupt timer(...){
 				mov sp, tsp
 				mov ss, tss
 				mov bp, tbp
+			}
+
+
+			if(PCB::runnig!=0 && PCB::runnig!=PCB::main){
+				//cout<<"PCB::runnig "<<PCB::runnig->id<<"->signalsWaitngForExecution->first = "<<PCB::runnig->signalsWaitngForExecution->getFirst()<<endl;
+				//cout<<"Ovde sam "<<PCB::runnig->id<<" "<<PCB::runnig->signalsWaitngForExecution->getNumOfSignalsWaitForExec()<<endl;
+				if(PCB::runnig->signalsWaitngForExecution->getNumOfSignalsWaitForExec()>0){
+					//cout<<"PCB:"<< PCB::runnig->id<<endl;
+					//cout<<"--Ovde saam "<<PCB::runnig->signalsWaitngForExecution->getNumOfSignalsWaitForExec()<<endl;
+					PCB::runnig->signalsWaitngForExecution->updateList();
+				}
 			}
 		}
 		else{
