@@ -76,7 +76,8 @@ lock
 
 			SignalHandlerList* shl = myPcb->signalArray[val];
 
-			cout<<"Lista "<<val<<endl;
+			//cout<<"Lista "<<val<<endl;
+			cout<<"Lista "<<val<< " idNiti:"<<this->myPcb->id<<endl;
 
 			if(shl!=0){
 				SignalHandlerList::SignalHandlerNode* temp = shl->first;
@@ -120,7 +121,7 @@ ExecutionWaitingList::~ExecutionWaitingList(){
 		return;
 	}else if(this->numOfSignalsWaitForExec>0){
 
-		//cout<<"Usao sam u destruktor"<<this->numOfSignalsWaitForExec <<" "<<this->myPcb->id<<endl;
+		cout<<"Usao sam u destruktor brSIgnala:"<<this->numOfSignalsWaitForExec <<" idNiti:"<<this->myPcb->id<<endl;
 
 
 		for (int brojac = 0; brojac < this->numOfSignalsWaitForExec; brojac++) {
@@ -136,8 +137,6 @@ ExecutionWaitingList::~ExecutionWaitingList(){
 			if(System::globallyBlockedSignals[val]==0 && this->myPcb->signalBlockArray[val]==0){
 
 				SignalHandlerList* shl = myPcb->signalArray[val];
-
-				cout<<"Lista "<<val<<endl;
 
 				if(shl!=0){
 					SignalHandlerList::SignalHandlerNode* temp = shl->first;

@@ -26,7 +26,6 @@ KernelEv::~KernelEv(){
 	if(this->owner->getState()==PCB::BLOCKED){
 		this->owner->setState(PCB::READY);
 		cout<<"Brisem kernEv "<<this->owner->getState()<<endl;
-		cout<<"Otkocena "<<owner->getID()<<endl;
 		//Scheduler::put(owner);
 	}
 	System::interruptEntries[this->entryNum]->kernEvent=0;
@@ -89,7 +88,6 @@ void KernelEv::signal(){
 		//cout<<"Na READY "<<owner->getID()<<endl;
 		Scheduler::put(this->owner);
 	}
-
 
 	unlock
 	return;

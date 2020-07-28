@@ -29,10 +29,6 @@ KernelSem::~KernelSem(){
 
 int KernelSem::wait(int maxTimeToWait){
 
-	if(System::zaTestiranje){
-		cout<<"Usao sam u semafor wait vreme:"<<maxTimeToWait<<" nit:"<<PCB::runnig->getID()<<" vrednost sem:"<<value<<endl;
-	}
-
 	asm cli;
 
 	if(maxTimeToWait == 0){
@@ -46,17 +42,12 @@ int KernelSem::wait(int maxTimeToWait){
 		PCB::runnig->setState(PCB::BLOCKED);
 		blockList->insert(PCB::runnig);
 
-		if(System::zaTestiranje){
-			cout<<"Dodata u blockList vreme:"<<maxTimeToWait<<" nit:"<<PCB::runnig->getID()<<endl;
-		}
+		//cout<<"Dodata u blockList"<<endl;
 	}
 	else{
 		PCB::runnig->setState(PCB::BLOCKED);
 		value=value-1;
 		this->timeBlockList->insert(PCB::runnig,maxTimeToWait,this);
-		if(System::zaTestiranje){
-			cout<<"Dodata u timeBlockList vreme:"<<maxTimeToWait<<" nit:"<<PCB::runnig->getID()<<endl;
-		}
 	}
 
 	asm sti;
@@ -85,10 +76,6 @@ int KernelSem::signal(int n){
 	/*lock
 	cout<<"SIGNAL "<<n<<endl;
 	unlock*/
-
-	if(System::zaTestiranje){
-		cout<<"Usao sam u semafor signal "<<" nit:"<<PCB::runnig->getID()<<" vrednost sem:"<<value<<endl;
-	}
 
 	lock
 

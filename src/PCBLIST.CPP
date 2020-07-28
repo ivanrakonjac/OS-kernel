@@ -54,6 +54,10 @@ int PCB_LIST::remove(PCB* pcb){
 	return 1;
 }
 
+/*
+ * vraca PCB* sa trazenim ID-jem
+ * ako nema takvog vraca 0
+ * */
 PCB* PCB_LIST::getPCBwithID(int id){
 	lock
 	if(first == 0){
@@ -107,7 +111,7 @@ void PCB_LIST::stampaj(){
 	Node* temp = first;
 	while(temp){
 		lock
-		cout<<temp->node->getID()<<"-"<<temp->node->getState()<<"| " ;
+		cout<<temp->node->getID()<<"-"<<temp->node->getState()<<" | ";
 		temp = temp->next;
 		unlock
 	}
