@@ -5,12 +5,11 @@
 #include <dos.h>
 #include "Thread.h"
 #include "system.h"
-#include "EXEWAIT.H"
 
 class Thread;
 class PCB_LIST;
-class SignalHandlerList;
-class ExecutionWaitingList;
+//class SignalHandlerList;
+//class ExecutionWaitingList;
 
 class PCB{
 
@@ -43,12 +42,9 @@ public:
 	Thread* getThread() const{
 		return this->myThread;
 	}
-	int getTimeUnblock(){
-		return this->timeUnblock;
-	}
-	Thread* getThread(){
-		return this->myThread;
-	}
+/*	int getSignalWoken() const{
+		return this->signalWoken;
+	}*/
 
 
 	void setID(int id){
@@ -60,28 +56,21 @@ public:
 	void setTimeUnblock(int val){
 		this->timeUnblock=val;
 	}
-	void setThread(Thread* thread){
-		this->myThread=thread;
+	int getTimeUnblock(){
+		return this->timeUnblock;
 	}
-
-
-/*	int getSignalWoken() const{
-		return this->signalWoken;
-	}
-	void setSignalWoken(int i){
+/*	void setSignalWoken(int i){
 		this->signalWoken = i;
-	}
-*/
+	}*/
 
 
 	static int getRunningId(){
-		//cout<<"PCB::running "<<PCB::runnig->id<<endl;
-		return PCB::runnig->id;
+		return runnig->id;
 	}
 
 	static void wrapper();
 
-
+/*
 	void signal(SignalId signal);
 
 	void registerHandler(SignalId signal, SignalHandler handler);
@@ -92,18 +81,16 @@ public:
 	void blockSignal(SignalId signal);
 	void unblockSignal(SignalId signal);
 
+	void updateSignalWaitgList();
+*/
 
 	PCB_LIST* getListu(){
 		return this->blockedOnThread;
 	}
 
-protected:
-	void systemSignal(SignalId id);
-
 private:
 
 	friend void interrupt timer(...);
-	friend class ExecutionWaitingList;
 
 	unsigned bp;
 	unsigned sp;
@@ -118,9 +105,12 @@ private:
 	int timeUnblock;
 
 	PCB* owner;
-	SignalHandlerList* signalArray[16]; //svaki od signala ima pokazivac na listu handlera
-	int signalBlockArray[16];
-	ExecutionWaitingList* signalsWaitngForExecution;
+//	int signalCounter;
+//	SignalHandlerList* signalArray[16];
+//	int signalBlockArray[16];
+//	ExecutionWaitingList* signalsWaitngForExecution;
+
+
 
 };
 

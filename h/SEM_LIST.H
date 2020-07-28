@@ -37,6 +37,7 @@ public:
 	static SemNode* first;
 	static SemNode* last;
 
+
 };
 
 #endif

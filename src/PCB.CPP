@@ -6,10 +6,8 @@
 #include "PCBLIST.H"
 #include "SCHEDULE.H"
 #include <iostream.h>
-#include "SIGNLIST.H"
-#include "EXEWAIT.H"
-
-#include <iostream.h>
+//#include "SIGNLIST.H"
+//#include "EXEWAIT.H"
 
 int PCB::ajdi=0;
 PCB* PCB::runnig= new PCB();
@@ -33,13 +31,13 @@ PCB::PCB(){
 	ss=0;
 	bp=0;
 
-	signalsWaitngForExecution=0;
+	//signalCounter=0;
+	//signalsWaitngForExecution=0;
 	owner=0;
-
-	for(int brojac=0;brojac<16;++brojac){
+	/*for(int brojac=0;brojac<16;++brojac){
 		signalArray[brojac]=0;
 		signalBlockArray[brojac]=0;
-	}
+	}*/
 }
 
 PCB::PCB(unsigned long stackSize, unsigned int timeSlice, Thread* myTr){
@@ -71,31 +69,29 @@ PCB::PCB(unsigned long stackSize, unsigned int timeSlice, Thread* myTr){
 
 		System::allThreads->insert(this);
 
-		this->signalsWaitngForExecution = new ExecutionWaitingList(this);
+		//signalCounter=0;
+		//this->signalsWaitngForExecution = new ExecutionWaitingList();
 		this->owner = PCB::runnig;
-
-		for(int brojac=0;brojac<16;++brojac){
+		/*for(int brojac=0;brojac<16;++brojac){
 			signalArray[brojac]=0;
 			signalBlockArray[brojac]=0;
-		}
+		}*/
 
-		//Nit koja se kreira nasledjuje sva podesavanja, vezan za signale, od niti koja ju je napravila
-		if(owner!=0){
+		/*if(owner!=0){
 			for(int brojac=0;brojac<16;++brojac){
 				signalBlockArray[brojac]=owner->signalBlockArray[brojac];
-				if(this->owner->signalArray[brojac]!=0){
-					this->signalArray[brojac]=owner->signalArray[brojac];
-					cout<<"this: "<<this->signalArray[brojac]<<" owner: "<<owner->signalArray[brojac]<<endl;
-				}
 			}
-		}
+		}*/
 
 		asm sti;
 }
 
 PCB::~PCB(){
+	/*lock
+	cout<<"Brise se PCB: "<<this->id<<endl;
+	unlock*/
 	asm cli
-	delete signalsWaitngForExecution;
+	//delete signalsWaitngForExecution;
 	delete blockedOnThread;
 
 	System::allThreads->remove(this);
@@ -151,15 +147,15 @@ void PCB::wrapper(){
 
 	for(temp;temp!=0;temp=runnig->blockedOnThread->popFront()){
 		temp->state = READY;
+
 		Scheduler::put(temp);
 	}
 
-	if (PCB::runnig->owner!=0 && PCB::runnig->owner->signalArray[1]!=0) {
-		//cout<<"PCB::runnig->owner->id "<<PCB::runnig->owner->id<<" "<<PCB::runnig->owner->signalArray[1]<<endl;
-		PCB::runnig->owner->systemSignal(1);
+	/*if (PCB::runnig->owner!=0) {
+		PCB::runnig->owner->signal(1);
 	}
 
-	PCB::runnig->systemSignal(2);
+	PCB::runnig->signal(2);*/
 
 	PCB::runnig->state = PCB::FINISHED;
 
@@ -168,7 +164,7 @@ void PCB::wrapper(){
 	unlock
 	System::dispatch();
 }
-
+/*
 void PCB::blockSignal(SignalId id){
 	signalBlockArray[id]=1;
 }
@@ -177,81 +173,63 @@ void PCB::unblockSignal(SignalId id){
 }
 
 void PCB::registerHandler(SignalId id,SignalHandler sh){
-
 	if(signalArray[id]==0){
-		cout<<"signalArray[id]==0"<<endl;
 		signalArray[id] = new SignalHandlerList();
 		signalArray[id]->addToTheEnd(sh);
 	}
 	else{
 		signalArray[id]->addToTheEnd(sh);
 	}
-
 }
 
 void PCB::swap(SignalId id,SignalHandler sh1,SignalHandler sh2){
-	cout<<"PCB::swap"<<endl;
-	//if(signalArray[id]==0) return;
+	if(signalArray[id]==0) return;
 	signalArray[id]->swap(sh1,sh2);
 }
 
 void PCB::unregisterAllHandlers(SignalId id){
-	this->signalArray[id]->unregisterAllHandlers(id);
+	if(signalArray[id]==0) return;
+	signalArray[id]->~SignalHandlerList();
 }
 
 void PCB::signal(SignalId id){
+	if(id==1 || id==2) return; //sistemski signali
 
-	//signali 1 i 2 su sistemski signali
-	if(id==1 || id==2) return;
-
-	//za hendlovanje signalom 0
-	if(id==0){
-		cout<<"this->myPcb->id "<<this->id<<endl;
-		/*
-		delete this->signalsWaitngForExecution;
-
-		PCB* temp = runnig->blockedOnThread->popFront();
-
-		for(temp;temp!=0;temp=runnig->blockedOnThread->popFront()){
-			temp->state = READY;
-			Scheduler::put(temp);
-		}
-
-		this->setState(PCB::FINISHED);
-		unlock
-		dispatch();*/
-		return;
-	}
-
-	if(this==PCB::main && this->signalsWaitngForExecution==0){
-		this->signalsWaitngForExecution = new ExecutionWaitingList(PCB::main);
-	}
-
-	if(this->signalsWaitngForExecution!=0){
-		this->signalsWaitngForExecution->add(id);
-	}
-
+	this->signalsWaitngForExecution->add(id);
+	this->signalCounter+=1;
 }
 
-//Fja samo za slanje signala 1 i 2
-void PCB::systemSignal(SignalId id){
+void PCB::updateSignalWaitgList(){
+	int cntr2=0;
+	for(int i=0;i<signalCounter;++i){
+		unsigned id = signalsWaitngForExecution->popFirst();
 
-	//cout<<"Usao sam u systSign "<<id<<endl;
 
-	if(id==1 || id==2){
-		if(this==PCB::main && this->signalsWaitngForExecution==0){
-			//cout<<"Napravio sam listu"<<endl;
-			this->signalsWaitngForExecution = new ExecutionWaitingList(PCB::main);
+		if(System::globallyBlockedSignals[id]==1){
+
+			signalsWaitngForExecution->add(id);
+			++cntr2;
+		}
+		else if(signalBlockArray[id] == 1){
+			signalsWaitngForExecution->add(id);
+			++cntr2;
+		}
+		else if(id==0){
+			this->state = PCB::FINISHED;
+			System::dispatch();
+		}
+		else{
+			SignalHandlerList* shl = signalArray[id];
+			SignalHandlerList::SignalHandlerNode* temp = shl->first;
+
+			while(temp){
+				temp->signalHandler();
+				temp = temp->n;
+			}
+
 		}
 
-		if(this->signalsWaitngForExecution!=0){
-			//cout<<"Dodao sam"<<endl;
-			this->signalsWaitngForExecution->add(id);
-		}
-	}else{
-		return;
 	}
 
-
-
-}
+	signalCounter = cntr2;
+}*/

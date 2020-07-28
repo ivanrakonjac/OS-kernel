@@ -19,18 +19,11 @@ ID Thread::getId(){
 }
 
 ID Thread::getRunningId(){
-	return PCB::getRunningId();
+	PCB::getRunningId();
 }
 
 Thread* Thread::getThreadById(int id){
-
-	if(id==-1){
-		PCB::main->setThread(new Thread());
-		PCB::main->getThread()->setMyPCB(PCB::main);
-		return PCB::main->getThread();
-	}else{
-		return System::allThreads->getPCBwithID(id)->getThread();
-	}
+	return System::allThreads->getPCBwithID(id)->getThread();
 }
 
 
@@ -53,16 +46,15 @@ Thread::~Thread(){
 void dispatch(){
 	System::dispatch();
 }
-
+/*
 void Thread::blockSignalGlobally(SignalId id){
 	System::globallyBlockedSignals[id]=1;
-	cout<<"System::globallyBlockedSignals["<<id<<"]"<<System::globallyBlockedSignals[id]<<endl;
 }
 void Thread::unblockSignalGlobally(SignalId id){
 	System::globallyBlockedSignals[id]=0;
 }
 
-void Thread::signal(SignalId id/*SignalHandler sh*/){
+void Thread::signal(SignalId id){
 	lock
 	myPCB->signal(id);
 	unlock
@@ -97,4 +89,4 @@ void Thread::unblockSignal(SignalId id){
 	myPCB->unblockSignal(id);
 	unlock
 }
-
+*/
