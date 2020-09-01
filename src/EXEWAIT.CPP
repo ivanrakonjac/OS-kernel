@@ -66,7 +66,6 @@ lock
 			unlock
 			return;
 		}
-		//cout<<"Val="<<val<<endl;;
 
 
 		if(System::globallyBlockedSignals[val]==0 && this->myPcb->signalBlockArray[val]==0){
@@ -75,9 +74,6 @@ lock
 			this->numOfSignalsWaitForExec=this->numOfSignalsWaitForExec-1;
 
 			SignalHandlerList* shl = myPcb->signalArray[val];
-
-			//cout<<"Lista "<<val<<endl;
-			cout<<"Lista "<<val<< " idNiti:"<<this->myPcb->id<<endl;
 
 			if(shl!=0){
 				SignalHandlerList::SignalHandlerNode* temp = shl->first;
@@ -105,13 +101,6 @@ unlock
 
 ExecutionWaitingList::~ExecutionWaitingList(){
 
-	/*if(this->myPcb->id==-1){
-		this->first=this->last=0;
-		this->myPcb=0;
-		this->numOfSignalsWaitForExec=0;
-		return;
-	}*/
-
 	if(PCB::pcbNum==2) return;
 
 	if(this->numOfSignalsWaitForExec==0){
@@ -121,8 +110,6 @@ ExecutionWaitingList::~ExecutionWaitingList(){
 		return;
 	}else if(this->numOfSignalsWaitForExec>0){
 
-		cout<<"Usao sam u destruktor brSIgnala:"<<this->numOfSignalsWaitForExec <<" idNiti:"<<this->myPcb->id<<endl;
-
 
 		for (int brojac = 0; brojac < this->numOfSignalsWaitForExec; brojac++) {
 			unsigned val=this->popFirst();
@@ -131,8 +118,6 @@ ExecutionWaitingList::~ExecutionWaitingList(){
 				unlock
 				return;
 			}
-
-			//cout<<"vrednost lokalnog blok niza"<<this->myPcb->signalBlockArray[val]<<endl;
 
 			if(System::globallyBlockedSignals[val]==0 && this->myPcb->signalBlockArray[val]==0){
 
@@ -147,7 +132,7 @@ ExecutionWaitingList::~ExecutionWaitingList(){
 					}
 				}
 			}else{
-				cout<<"Blokirano "<<val<<endl;
+				//cout<<"Blokirano "<<val<<endl;
 				if(val==65535) return;
 			}
 		}

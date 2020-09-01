@@ -13,7 +13,7 @@ class SignalHandlerList;
 class ExecutionWaitingList;
 
 class PCB{
-
+	friend class KernelSem;
 public:
 
 	static int ajdi;
@@ -105,6 +105,7 @@ private:
 	friend void interrupt timer(...);
 	friend class ExecutionWaitingList;
 
+	Time timeToSleep;
 	unsigned bp;
 	unsigned sp;
 	unsigned ss;

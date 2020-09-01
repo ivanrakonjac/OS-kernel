@@ -11,17 +11,14 @@ Event::Event(IVTNo n){
 
 Event::~Event(){
 	lock
-	//cout<<"Brisem event: "<<this<<endl;
 	delete myImpl;
 	unlock
 }
 
 void Event::wait(){
-	//cout<<"Event::wait()"<<endl;
 	myImpl->wait();
 }
 
 void Event::signal(){
-	//cout<<"Event::signal()"<<endl;
 	myImpl->signal();
 }

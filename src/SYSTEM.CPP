@@ -16,7 +16,7 @@ IVTEntry* System::interruptEntries[256]={0};
 int System::globallyBlockedSignals[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 int System::tstBrojac = 0;
 
-volatile unsigned int System::runningTimeCntr=20;
+volatile unsigned int System::runningTimeCntr=2;
 volatile unsigned int System::lockFlag=1;
 volatile unsigned int System::context_switch_on_demand=0;
 volatile int System::numberOfUserThreads=0;
@@ -52,10 +52,6 @@ void interrupt timer(...){
 
 	if (System::runningTimeCntr == 0 || System::context_switch_on_demand) {
 
-		if(System::zaTestiranje==1){
-			cout<<"runningpre sch:"<<PCB::runnig->getID()<<" "<<PCB::runnig->getState()<<endl;
-		}
-
 		if(System::lockFlag){
 			System::context_switch_on_demand=0;
 			asm {
@@ -76,10 +72,6 @@ void interrupt timer(...){
 				PCB::runnig=Scheduler::get();
 			}
 
-			if(System::zaTestiranje==1){
-				cout<<"running posle sch"<<PCB::runnig->id<<" "<<PCB::runnig->getState()<<endl;
-			}
-
 			if(PCB::runnig==0){
 				if(System::numberOfUserThreads>0) {
 					PCB::runnig = System::idleThread->myPCB;
@@ -91,12 +83,6 @@ void interrupt timer(...){
 					PCB::runnig = PCB::main;
 				}
 			}
-
-			/*if(PCB::runnig == System::idleThread->myPCB) {
-				asm cli;
-				cout << "Broju user niti je " << System::numberOfUserThreads << "\n";
-				asm sti;
-			}*/
 
 			tsp = PCB::runnig->sp;
 			tss = PCB::runnig->ss;
@@ -115,11 +101,8 @@ void interrupt timer(...){
 
 
 			if(PCB::runnig!=0 && PCB::runnig!=PCB::main){
-				//cout<<"PCB::runnig "<<PCB::runnig->id<<"->signalsWaitngForExecution->first = "<<PCB::runnig->signalsWaitngForExecution->getFirst()<<endl;
-				//cout<<"Ovde sam "<<PCB::runnig->id<<" "<<PCB::runnig->signalsWaitngForExecution->getNumOfSignalsWaitForExec()<<endl;
 				if(PCB::runnig->signalsWaitngForExecution->getNumOfSignalsWaitForExec()>0){
-					cout<<"PCB:"<< PCB::runnig->id<<endl;
-					cout<<"--Ovde saam "<<PCB::runnig->signalsWaitngForExecution->getNumOfSignalsWaitForExec()<<endl;
+					//cout<<"PCB:"<< PCB::runnig->id<<"| br signala na cekanju:"<<PCB::runnig->signalsWaitngForExecution->getNumOfSignalsWaitForExec()<<endl;
 					PCB::runnig->signalsWaitngForExecution->updateList();
 				}
 			}
@@ -151,61 +134,33 @@ void System::inic(){
 	PCB::main=new PCB();
 	PCB::runnig=PCB::main;
 
-	/*cout<<"Odradjen je inic"<<endl;
-	cout<<"IDLE "<<System::idleThread<<endl;
-	cout<<"MAIN "<<PCB::main<<endl;*/
 	asm sti
 }
 
 // vraca staru prekidnu rutinu
 void System::restore(){
 
-	/*lock
-	cout<<"Br pcb na poc restora:"<< PCB::pcbNum<<endl;
-	cout<<"Br threadova na poc restora:"<< Thread::threadNum<<endl;
-	PCB* first = System::allThreads->first->node;
-	cout<<"Ssytem::restore first= "<<first->getID()<<endl;
-	unlock*/
-
-
 	asm cli
 	setvect(stara,oldTimer);
-
-	/*cout<<"Sem: "<< endl;
-	System::allSem->stampaj();
-	cout<<"PCB:"<<endl;
-	System::allThreads->stampaj();*/
 
 	delete System::allThreads;
 	delete System::idleThread;
 	delete System::allSem;
 
-	//cout<<"-----------------"<<endl;
-
 	delete PCB::main;
-	delete PCB::runnig;
+	//delete PCB::runnig;
 
 	System::allSem=0;
 	System::allThreads=0;
 
-	/*cout<<"Sem:"<<endl;
-	System::allSem->stampaj();
-	cout<<"PCB:"<<endl;
-	System::allThreads->stampaj();*/
-
 	asm sti
-
-
-	/*lock
-	cout<<"Br threadova:"<< Thread::threadNum<<endl;
-	cout<<"Br pcb:"<< PCB::pcbNum<<endl;
-	unlock*/
 }
 
 // sinhrona promena konteksta
 void System::dispatch(){
+	asm pushf;
 	asm cli
 	System::context_switch_on_demand = 1;
 	timer();
-	asm sti;
+	asm popf;
 }

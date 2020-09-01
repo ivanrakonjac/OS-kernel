@@ -7,8 +7,11 @@ IVTEntry::IVTEntry(unsigned numEntry,pInterrupt newRout){
 
 	this->numEntry=numEntry;
 
+	asm pushf;
+	asm cli;
 	oldRout = getvect(numEntry);
 	setvect(numEntry,newRout);
+	asm popf;
 
 	this->kernEvent = 0;
 
@@ -18,10 +21,12 @@ IVTEntry::IVTEntry(unsigned numEntry,pInterrupt newRout){
 }
 
 IVTEntry::~IVTEntry(){
+	asm pushf;
 	asm cli;
+	oldRout();
 	setvect(numEntry,oldRout);
 	System::interruptEntries[this->numEntry] = 0;
-	asm sti;
+	asm popf;
 
 }
 

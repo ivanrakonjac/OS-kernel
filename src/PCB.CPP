@@ -12,8 +12,8 @@
 #include <iostream.h>
 
 int PCB::ajdi=0;
-PCB* PCB::runnig= new PCB();
-PCB* PCB::main = PCB::runnig;
+PCB* PCB::runnig= 0;//new PCB();
+PCB* PCB::main = 0;//PCB::runnig;
 int PCB::pcbNum=0;
 
 PCB::PCB(){
@@ -56,7 +56,7 @@ PCB::PCB(unsigned long stackSize, unsigned int timeSlice, Thread* myTr){
 
 		asm cli;
 
-		if(stackSize>65536) stackSize = 65536;
+		if(stackSize>65535) stackSize = 65535;
 		StackSize realStackSize = stackSize/sizeof(unsigned int);
 
 		stack = new unsigned [stackSize/sizeof(unsigned int)];
@@ -73,7 +73,7 @@ PCB::PCB(unsigned long stackSize, unsigned int timeSlice, Thread* myTr){
 
 		this->signalsWaitngForExecution = new ExecutionWaitingList(this);
 		this->owner = PCB::runnig;
-		cout<<"this: "<<this->id<<" owner: "<<owner->id<<endl;
+		//cout<<"this: "<<this->id<<" owner: "<<owner->id<<endl;
 
 		for(int brojac=0;brojac<16;++brojac){
 			signalArray[brojac]=0;
@@ -95,7 +95,7 @@ PCB::PCB(unsigned long stackSize, unsigned int timeSlice, Thread* myTr){
 }
 
 PCB::~PCB(){
-	asm
+	asm cli;
 
 	if(this->killedBySignal==0){
 		delete signalsWaitngForExecution;
@@ -183,7 +183,7 @@ void PCB::unblockSignal(SignalId id){
 void PCB::registerHandler(SignalId id,SignalHandler sh){
 
 	if(signalArray[id]==0){
-		cout<<"signalArray[id]==0"<<endl;
+		//cout<<"signalArray[id]==0"<<endl;
 		signalArray[id] = new SignalHandlerList();
 		signalArray[id]->addToTheEnd(sh);
 	}
@@ -194,7 +194,7 @@ void PCB::registerHandler(SignalId id,SignalHandler sh){
 }
 
 void PCB::swap(SignalId id,SignalHandler sh1,SignalHandler sh2){
-	cout<<"PCB::swap"<<endl;
+	//cout<<"PCB::swap"<<endl;
 	//if(signalArray[id]==0) return;
 	signalArray[id]->swap(sh1,sh2);
 }
@@ -215,14 +215,10 @@ void PCB::signal(SignalId id){
 
 	//za hendlovanje signalom 0
 	if(id==0){
-		cout<<"SIGNAL0 this->myPcb->id "<<this->id<<endl;
+		//cout<<"SIGNAL0 this->myPcb->id "<<this->id<<endl;
 
 		//odblokiram sve niti zabodene na ovoj i obrisem listu
 		delete this->blockedOnThread;
-
-		//cout<<"owner:"<<this->owner->id<<endl;
-		//cout<<"this->owner->signalArray[1] = "<<this->owner->signalArray[1]<<endl;
-
 
 		if (this->owner!=0 && this->owner->signalArray[1]!=0) {
 			//cout<<"Poslat signal 1 "<<endl;
@@ -234,17 +230,7 @@ void PCB::signal(SignalId id){
 		this->state = PCB::FINISHED;
 		this->killedBySignal=1;
 
-		this->signalsWaitngForExecution->stampaj();
-
 		delete this->signalsWaitngForExecution;
-
-		this->signalsWaitngForExecution->stampaj();
-
-		System::allThreads->stampaj();
-
-		//cout<<"Sklonjena iz liste - "<<System::allThreads->remove(this)<<endl
-
-		//System::zaTestiranje=1;
 
 		unlock
 		System::dispatch();

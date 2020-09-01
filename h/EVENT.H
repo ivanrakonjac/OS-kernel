@@ -1,6 +1,6 @@
 #ifndef _EVENT_H
 #define _EVENT_H
-
+#include "IVTENTRY.H"
 typedef unsigned char IVTNo;
 
 class Event {

@@ -99,7 +99,7 @@ SEM_LIST::~SEM_LIST(){
 
 		if(temp==0) break;
 
-		delete temp;
+		//delete temp;
 	}
 	SEM_LIST::first=SEM_LIST::last=0;
 
@@ -108,26 +108,10 @@ SEM_LIST::~SEM_LIST(){
 void SEM_LIST::updateTimeBlockedThreads(){
 	SemNode* temp = SEM_LIST::first;
 
-
-	/*lock
-	cout<<"-------------Lista svih sem:----------"<<endl;
-	cout<<"Semafori: ";
-	unlock
-	System::allSem->stampaj();*/
-
 	while(temp){
-		temp->kernelSem->getTimeBlockList()->update();
-		/*
-		cout<<"Semafor: "<<temp->kernelSem->val()<<" blockLista: ";
-		temp->kernelSem->getBlockList()->stampaj();
-		cout<<"Semafor: "<<temp->kernelSem->val()<<" timeblockLista: ";
-		temp->kernelSem->getTimeBlockList()->stampaj();
-		unlock*/
+		temp->kernelSem->update();
 		temp=temp->next;
 	}
-	/*lock
-	cout<<"----------------------------"<<endl;
-	unlock*/
 }
 
 

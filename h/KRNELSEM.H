@@ -3,6 +3,7 @@
 
 class PCB_LIST;
 class TIME_BLCK_LIST;
+class Queue;
 
 class KernelSem{
 public:
@@ -11,21 +12,24 @@ public:
 
 	int val() const;
 	int wait(int maxTimeToWait);
-	int signal(int n);
+	int signal(int n=0);
 
 	void incVal();
+	void update();
 
-	TIME_BLCK_LIST* getTimeBlockList(){
+	/*TIME_BLCK_LIST* getTimeBlockList(){
 		return timeBlockList;
 	}
 
 	PCB_LIST* getBlockList(){
 		return blockList;
-	}
+	}*/
 
 private:
-	PCB_LIST* blockList;
-	TIME_BLCK_LIST* timeBlockList;
+	//PCB_LIST* blockList;
+	//TIME_BLCK_LIST* timeBlockList;
+	Queue* blockList;
+	Queue* timeBlockList;
 	int value;
 };
 

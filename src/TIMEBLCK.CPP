@@ -151,11 +151,6 @@ int TIME_BLCK_LIST::insert(PCB* pcb,Time maxTime,KernelSem* sem){
 }
 
 TIME_BLCK_LIST::timeNode* TIME_BLCK_LIST::popFront(){
-	/*lock
-	cout<<"Prvi u time block listi:"<<first<<endl;
-	cout<<"Running:"<<PCB::runnig<<endl;
-	unlock*/
-
 
 	lock
 	if(first == 0){
@@ -184,11 +179,11 @@ TIME_BLCK_LIST::~TIME_BLCK_LIST(){
 		timeNode* temp=this->popFront();
 
 		//ako je ostala neka nit zablokirana
-		PCB* pcb=temp->data;
+		/*PCB* pcb=temp->data;
 		if(pcb->getState()==PCB::BLOCKED){
 			pcb->setState(PCB::READY);
 			Scheduler::put(pcb);
-		}
+		}*/
 
 		delete temp;
 	}
@@ -208,10 +203,10 @@ void TIME_BLCK_LIST::stampaj(){
 }
 
 void TIME_BLCK_LIST::update(){
-	lock
+	//lock
 	if(first==0){
 		//cout<<"Ovde nema nikog"<<endl;
-		unlock
+		//unlock
 		return;
 	}
 	first->decTime();
@@ -234,5 +229,5 @@ void TIME_BLCK_LIST::update(){
 
 		Scheduler::put(temp->data);
 	}
-	unlock
+	//unlock
 }

@@ -5,18 +5,17 @@
 #include "PCB.H"
 #include "SCHEDULE.H"
 #include "SEM_LIST.H"
+#include "queue.h"
 
 KernelSem::KernelSem(int inic){
 	asm cli;
 	value = inic;
-	blockList = new PCB_LIST();
-	timeBlockList=new TIME_BLCK_LIST();
+	//blockList = new PCB_LIST();
+	//timeBlockList=new TIME_BLCK_LIST();
+	blockList = new Queue();
+	timeBlockList = new Queue();
 	System::allSem->insert(this);
 	asm sti;
-
-	/*lock
-	cout<<"Dodat sem sa vredn: "<<value<<endl;
-	unlock*/
 }
 
 KernelSem::~KernelSem(){
@@ -28,37 +27,22 @@ KernelSem::~KernelSem(){
 }
 
 int KernelSem::wait(int maxTimeToWait){
+	PCB::runnig->setTimeUnblock(0);
 
-	asm cli;
+	if (--value < 0) {
+		PCB::runnig->setState(PCB::BLOCKED);
 
-	if(maxTimeToWait == 0){
-		value = value - 1;
-
-		if(value>=0){
-			asm sti;
-			return 1;
+		if(maxTimeToWait == 0){
+			//blockList->insert(PCB::runnig);
+			blockList->put(PCB::runnig);
 		}
-
-		PCB::runnig->setState(PCB::BLOCKED);
-		blockList->insert(PCB::runnig);
-
-		//cout<<"Dodata u blockList"<<endl;
+		else{
+			//this->timeBlockList->insert(PCB::runnig,maxTimeToWait,this);
+			timeBlockList->put(PCB::runnig);
+			PCB::runnig->timeToSleep = maxTimeToWait;
+		}
+		System::dispatch();
 	}
-	else{
-		PCB::runnig->setState(PCB::BLOCKED);
-		value=value-1;
-		this->timeBlockList->insert(PCB::runnig,maxTimeToWait,this);
-	}
-
-	asm sti;
-
-	System::dispatch();
-
-
-	/*if(!PCB::runnig->getSignalWoken()){
-		PCB::runnig->setSignalWoken(0);
-		return 0;
-	}*/
 
 	if(PCB::runnig->getTimeUnblock()){
 		//ponistavam bit vremenskog budjenja, da bi ga koristio i sl put
@@ -73,10 +57,6 @@ int KernelSem::wait(int maxTimeToWait){
 
 int KernelSem::signal(int n){
 
-	/*lock
-	cout<<"SIGNAL "<<n<<endl;
-	unlock*/
-
 	lock
 
 	if(n<0){
@@ -86,34 +66,29 @@ int KernelSem::signal(int n){
 	else if(n == 0 ){
 		value = value + 1;
 
-		PCB* temp = blockList->popFront();
+		PCB* temp = blockList->get();//popFront();
 
 		if(temp==0){
-			/*cout<<"Usao sam ovde je je blokcLista prazna"<<endl;
-			cout<<"Temp first: "<<timeBlockList->first->data<<endl;*/
-			TIME_BLCK_LIST::timeNode* tndp=timeBlockList->popFront();
-			if(tndp==0){
-				//cout<<"Vracam 0 i bezim"<<endl;
+			//TIME_BLCK_LIST::timeNode* tndp=timeBlockList->popFront();
+			temp = timeBlockList->get();
+			if(temp==0){
 				unlock
 				return 0;
 			}
-			temp=tndp->data;
-			//cout<<"Temp: "<<temp<<endl;
+			//temp=tndp->data;
 		}
 
 		if(temp == 0){
-			cout<<"Nema nikoga"<<endl;
+			//cout<<"Nema nikoga"<<endl;
 			unlock
 			return n;
 		}
 
 		temp->setState(PCB::READY);
-		//temp->setSignalWoken(1);
 
 		Scheduler::put(temp);
 
 		unlock
-		//cout<<"Temp->PCB"<<temp<<endl;
 		return 0;
 	}
 	else if(n>0){
@@ -121,14 +96,14 @@ int KernelSem::signal(int n){
 		value = value + n;
 
 		for (int i= 0; i < n; ++i) {
-			PCB* temp = blockList->popFront();
+			//PCB* temp = blockList->popFront();
+			PCB* temp = blockList->get();
 			if(temp == 0){
 				break;
 			}
 
 			cntr++;
 			temp->setState(PCB::READY);
-			//temp->setSignalWoken(1);
 
 			Scheduler::put(temp);
 		}
@@ -136,17 +111,22 @@ int KernelSem::signal(int n){
 
 		for (int j= cntr; j < n; ++j) {
 
-			this->timeBlockList->stampaj();
+			//this->timeBlockList->stampaj();
 
-			TIME_BLCK_LIST::timeNode* temp2=timeBlockList->popFront();
+			//TIME_BLCK_LIST::timeNode* temp2=timeBlockList->popFront();
+
 			//cout<<temp2<<endl;
 
-			if(temp2 == 0){
+			/*if(temp2 == 0){
+				unlock
+				return cntr;
+			}*/
+
+			PCB* temp = timeBlockList->get();
+			if(temp == 0){
 				unlock
 				return cntr;
 			}
-
-			PCB* temp = temp2->data;
 
 			cntr++;
 			temp->setState(PCB::READY);
@@ -167,4 +147,28 @@ int KernelSem::val() const{
 
 void KernelSem::incVal(){
 	value = value + 1;
+}
+
+void KernelSem::update() {
+	Elem *t = timeBlockList->first;
+	Elem *p = 0, *d = 0;
+	while (t) {
+		t->pcb->timeToSleep--;
+		if (t->pcb->timeToSleep > 0) {
+			p = t;
+			t = t->next;
+		} else {
+			t->pcb->state = PCB::READY;
+			t->pcb->setTimeUnblock(1);
+			Scheduler::put(t->pcb);
+			d = t;
+			t = t->next;
+			if (!p)
+				timeBlockList->first = t;
+			else
+				p->next = t;
+			delete d;
+			value++;
+		}
+	}
 }

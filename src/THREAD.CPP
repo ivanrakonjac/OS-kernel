@@ -56,7 +56,7 @@ void dispatch(){
 
 void Thread::blockSignalGlobally(SignalId id){
 	System::globallyBlockedSignals[id]=1;
-	cout<<"System::globallyBlockedSignals["<<id<<"]"<<System::globallyBlockedSignals[id]<<endl;
+	//cout<<"System::globallyBlockedSignals["<<id<<"]"<<System::globallyBlockedSignals[id]<<endl;
 }
 void Thread::unblockSignalGlobally(SignalId id){
 	System::globallyBlockedSignals[id]=0;

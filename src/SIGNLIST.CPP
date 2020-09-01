@@ -68,7 +68,7 @@ void SignalHandlerList::swap(SignalHandler sh1,SignalHandler sh2){
 }
 
 void SignalHandlerList::unregisterAllHandlers(unsigned id){
-	cout<<"Ukloni hendlere za "<<id<<endl;
+	//cout<<"Ukloni hendlere za "<<id<<endl;
 
 	while(SignalHandlerList::first){
 		SignalHandlerNode* temp = SignalHandlerList::first;
