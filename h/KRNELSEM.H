@@ -17,17 +17,7 @@ public:
 	void incVal();
 	void update();
 
-	/*TIME_BLCK_LIST* getTimeBlockList(){
-		return timeBlockList;
-	}
-
-	PCB_LIST* getBlockList(){
-		return blockList;
-	}*/
-
 private:
-	//PCB_LIST* blockList;
-	//TIME_BLCK_LIST* timeBlockList;
 	Queue* blockList;
 	Queue* timeBlockList;
 	int value;

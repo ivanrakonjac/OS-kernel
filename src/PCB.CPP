@@ -12,8 +12,8 @@
 #include <iostream.h>
 
 int PCB::ajdi=0;
-PCB* PCB::runnig= 0;//new PCB();
-PCB* PCB::main = 0;//PCB::runnig;
+PCB* PCB::runnig= 0;
+PCB* PCB::main = 0;
 int PCB::pcbNum=0;
 
 PCB::PCB(){
@@ -86,7 +86,6 @@ PCB::PCB(unsigned long stackSize, unsigned int timeSlice, Thread* myTr){
 				signalBlockArray[brojac]=owner->signalBlockArray[brojac];
 				if(this->owner->signalArray[brojac]!=0){
 					this->signalArray[brojac]=owner->signalArray[brojac];
-					//cout<<"this: "<<this->id<<" "<<this->signalArray[brojac]<<" owner: "<<owner->signalArray[brojac]<<endl;
 				}
 			}
 		}
@@ -105,8 +104,6 @@ PCB::~PCB(){
 	System::allThreads->remove(this);
 
 	PCB::pcbNum=PCB::pcbNum-1;
-
-	//cout<<"Sklonjena iz liste - "<<System::allThreads->remove(this)<<endl;
 
 	if(this->stack)
 		delete [] this->stack;
@@ -159,7 +156,6 @@ void PCB::wrapper(){
 	}
 
 	if (PCB::runnig->owner!=0 && PCB::runnig->owner->signalArray[1]!=0) {
-		//cout<<"PCB::runnig->owner->id "<<PCB::runnig->owner->id<<" "<<PCB::runnig->owner->signalArray[1]<<endl;
 		PCB::runnig->owner->systemSignal(1);
 	}
 
@@ -183,7 +179,6 @@ void PCB::unblockSignal(SignalId id){
 void PCB::registerHandler(SignalId id,SignalHandler sh){
 
 	if(signalArray[id]==0){
-		//cout<<"signalArray[id]==0"<<endl;
 		signalArray[id] = new SignalHandlerList();
 		signalArray[id]->addToTheEnd(sh);
 	}
@@ -194,8 +189,6 @@ void PCB::registerHandler(SignalId id,SignalHandler sh){
 }
 
 void PCB::swap(SignalId id,SignalHandler sh1,SignalHandler sh2){
-	//cout<<"PCB::swap"<<endl;
-	//if(signalArray[id]==0) return;
 	signalArray[id]->swap(sh1,sh2);
 }
 
@@ -215,13 +208,11 @@ void PCB::signal(SignalId id){
 
 	//za hendlovanje signalom 0
 	if(id==0){
-		//cout<<"SIGNAL0 this->myPcb->id "<<this->id<<endl;
 
 		//odblokiram sve niti zabodene na ovoj i obrisem listu
 		delete this->blockedOnThread;
 
 		if (this->owner!=0 && this->owner->signalArray[1]!=0) {
-			//cout<<"Poslat signal 1 "<<endl;
 			this->owner->systemSignal(1);
 		}
 
@@ -252,8 +243,6 @@ void PCB::signal(SignalId id){
 
 //Fja samo za slanje signala 1 i 2
 void PCB::systemSignal(SignalId id){
-
-	//cout<<"Usao sam u systSign "<<id<<endl;
 
 	if(id==1 || id==2){
 		if(this==PCB::main && this->signalsWaitngForExecution==0){

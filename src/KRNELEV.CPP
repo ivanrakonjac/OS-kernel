@@ -22,11 +22,6 @@ KernelEv::KernelEv(unsigned ivtNo){
 
 KernelEv::~KernelEv(){
 	lock
-	/*if(this->owner->getState()==PCB::BLOCKED){
-		this->owner->setState(PCB::READY);
-		//cout<<"Brisem kernEv "<<this->owner->getState()<<endl;
-		//Scheduler::put(owner);
-	}*/
 	System::interruptEntries[this->entryNum]->kernEvent=0;
 	KernelEv::kerEvNum--;
 	unlock
@@ -44,13 +39,11 @@ void KernelEv::wait(){
 		unlock
 	}
 
-	//unlock
 	return;
 }
 
 void KernelEv::signal(){
 	lock
-	//System::tstBrojac++;
 
 	if(this->owner->getState()==PCB::BLOCKED){
 		this->owner->setState(PCB::READY);

@@ -32,7 +32,6 @@ class Thread {
 
 
 	 	void signal(SignalId signal);
-	 	//void signal(SignalHandler sh);
 
 	 	void registerHandler(SignalId signal, SignalHandler handler);
 		void unregisterAllHandlers(SignalId id);

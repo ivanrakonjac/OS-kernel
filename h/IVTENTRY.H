@@ -22,13 +22,6 @@ public:
 	void signal();
 	void callOldRoutine();
 
-	/*KernelEv* getEvent(){
-		return this->kernEvent;
-	}
-	void setEvent(KernelEv* kev){
-		this->kernEvent = kev;
-	}*/
-
 private:
 	friend class KernelEv;
 	pInterrupt oldRout;

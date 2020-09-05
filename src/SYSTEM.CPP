@@ -40,8 +40,6 @@ void tick();
 // nova prekidna rutina tajmera
 void interrupt timer(...){
 
-	//cout<<"Usao sam u timer"<<endl;
-
 	if (!System::context_switch_on_demand){
 		tick();
 		System::runningTimeCntr--;
@@ -102,7 +100,6 @@ void interrupt timer(...){
 
 			if(PCB::runnig!=0 && PCB::runnig!=PCB::main){
 				if(PCB::runnig->signalsWaitngForExecution->getNumOfSignalsWaitForExec()>0){
-					//cout<<"PCB:"<< PCB::runnig->id<<"| br signala na cekanju:"<<PCB::runnig->signalsWaitngForExecution->getNumOfSignalsWaitForExec()<<endl;
 					PCB::runnig->signalsWaitngForExecution->updateList();
 				}
 			}

@@ -65,17 +65,8 @@ public:
 	}
 
 
-/*	int getSignalWoken() const{
-		return this->signalWoken;
-	}
-	void setSignalWoken(int i){
-		this->signalWoken = i;
-	}
-*/
-
 
 	static int getRunningId(){
-		//cout<<"PCB::running "<<PCB::runnig->id<<endl;
 		return PCB::runnig->id;
 	}
 

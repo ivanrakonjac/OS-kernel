@@ -131,13 +131,6 @@ PCB_LIST::~PCB_LIST(){
 			break;
 		}
 
-		//ako je ostala neka nit zablokirana
-		/*if(pcb->getState()==PCB::BLOCKED){
-			//cout<<"Ubacio sam nit "<<pcb->getID()<<endl;
-			pcb->setState(PCB::READY);
-			Scheduler::put(pcb);
-		}*/
-
 	}
 	first=last=0;
 }

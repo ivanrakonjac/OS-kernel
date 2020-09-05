@@ -10,8 +10,6 @@
 KernelSem::KernelSem(int inic){
 	asm cli;
 	value = inic;
-	//blockList = new PCB_LIST();
-	//timeBlockList=new TIME_BLCK_LIST();
 	blockList = new Queue();
 	timeBlockList = new Queue();
 	System::allSem->insert(this);
@@ -33,11 +31,9 @@ int KernelSem::wait(int maxTimeToWait){
 		PCB::runnig->setState(PCB::BLOCKED);
 
 		if(maxTimeToWait == 0){
-			//blockList->insert(PCB::runnig);
 			blockList->put(PCB::runnig);
 		}
 		else{
-			//this->timeBlockList->insert(PCB::runnig,maxTimeToWait,this);
 			timeBlockList->put(PCB::runnig);
 			PCB::runnig->timeToSleep = maxTimeToWait;
 		}
@@ -66,16 +62,14 @@ int KernelSem::signal(int n){
 	else if(n == 0 ){
 		value = value + 1;
 
-		PCB* temp = blockList->get();//popFront();
+		PCB* temp = blockList->get();
 
 		if(temp==0){
-			//TIME_BLCK_LIST::timeNode* tndp=timeBlockList->popFront();
 			temp = timeBlockList->get();
 			if(temp==0){
 				unlock
 				return 0;
 			}
-			//temp=tndp->data;
 		}
 
 		if(temp == 0){
@@ -96,7 +90,6 @@ int KernelSem::signal(int n){
 		value = value + n;
 
 		for (int i= 0; i < n; ++i) {
-			//PCB* temp = blockList->popFront();
 			PCB* temp = blockList->get();
 			if(temp == 0){
 				break;
@@ -111,17 +104,6 @@ int KernelSem::signal(int n){
 
 		for (int j= cntr; j < n; ++j) {
 
-			//this->timeBlockList->stampaj();
-
-			//TIME_BLCK_LIST::timeNode* temp2=timeBlockList->popFront();
-
-			//cout<<temp2<<endl;
-
-			/*if(temp2 == 0){
-				unlock
-				return cntr;
-			}*/
-
 			PCB* temp = timeBlockList->get();
 			if(temp == 0){
 				unlock
@@ -130,7 +112,6 @@ int KernelSem::signal(int n){
 
 			cntr++;
 			temp->setState(PCB::READY);
-			//temp->setSignalWoken(1);
 
 			Scheduler::put(temp);
 		}
